@@ -1,0 +1,5 @@
+message: '&bCombat: &7&l[&a%s&c%s&7&l] &r&e%s &b[sec]'
+safe-logout-message: '&aYou can now safely disconnect'
+character: '||'
+timeout: 10
+plugin-check: true
