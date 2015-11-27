@@ -64,6 +64,7 @@ public class Main extends JavaPlugin implements Listener {
 
 	@Override
 	public void onDisable() {
+		//Cleaning and cancelling all the tasks
 		for (Entry<String, Integer> entry : log.entrySet()) {
 			cancelTask(log.remove(entry.getKey()));
 		}
@@ -71,6 +72,7 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onHit(EntityDamageByEntityEvent event) {
+		//The tagging and sending of the actionbar
 		if (event.isCancelled()) return;
 		if (event.getEntity() instanceof Player) {
 			Player damaged = (Player) event.getEntity();
@@ -89,25 +91,25 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onDeath(PlayerDeathEvent event) {
+		//Removing the player from the log and canceling the task when the player dies
 		checkBar(event.getEntity());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onQuit(PlayerQuitEvent event) {
+		//Removing the player from the log and canceling the task when the player quits
 		checkBar(event.getPlayer());
 	}
 
-	public String color(String string) {
-		return ChatColor.translateAlternateColorCodes('&', string);
-	}
-
 	public void checkBar(Player player) {
+		//Removes the player from the log and cancels the task
 		if (log.containsKey(player.getName())) {
 			cancelTask(log.remove(player.getName()));
 		}
 	}
 
 	public boolean checkCompatiblePlugin() {
+		//Checking for all the compatible plugins classes
 		for (String name : Arrays.asList(
 				"com.jackproehl.plugins.CombatLog", 
 				"net.techcable.combattag.CombatTag",
@@ -119,27 +121,33 @@ public class Main extends JavaPlugin implements Listener {
 		return false;
 	}
 
+	//Adding color to messages
+	public String color(String string) {
+		return ChatColor.translateAlternateColorCodes('&', string);
+	}
+	
+	//Canceling a task with its id
 	public void cancelTask(int taskId) {
 		getServer().getScheduler().cancelTask(taskId);
 	}
 
 	public void sendTag(Player... players) {
 		for (final Player player : players) {
-			if (log.containsKey(player.getName()))
-				cancelTask(log.remove(player.getName()));
+			//Canceling the previous task associated with the same player
+			if (log.containsKey(player.getName())) cancelTask(log.remove(player.getName()));
 			log.put(player.getName(), getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 				int times = seconds;
 				@Override
 				public void run() {
 					if (times > 0) {
-						sendActionBar(player,
-								color(message
-										//Replacements for the message
-										.replace("{left}", bar.substring(0, times * character.length()))
-										.replace("{right}", bar.substring(times * character.length(), bar.length()))
-										.replace("{seconds}", Integer.toString(times))));
+						sendActionBar(player, color(message
+								//Replacements for the message
+								.replace("{left}", bar.substring(0, times * character.length()))
+								.replace("{right}", bar.substring(times * character.length(), bar.length()))
+								.replace("{seconds}", Integer.toString(times))));
 						times--;
 					} else {
+						//Sending the logout message and cancelling the task
 						sendActionBar(player, color(logoutMessage));
 						cancelTask(log.remove(player.getName()));
 					}
@@ -147,7 +155,8 @@ public class Main extends JavaPlugin implements Listener {
 			}, 0, 20));
 		}
 	}
-
+	
+	//Method taken from ActionBarAPI
 	private void sendActionBar(Player player, String message) {
 		try {
 			Class<?> c1 = Class.forName("org.bukkit.craftbukkit." + nmsver + ".entity.CraftPlayer");
@@ -174,7 +183,10 @@ public class Main extends JavaPlugin implements Listener {
 			Method m5 = pc.getClass().getDeclaredMethod("sendPacket", new Class<?>[] { c5 });
 			m5.invoke(pc, ppoc);
 		} catch (Exception ex) {
+			getLogger().severe("The plugin is not compatible with the server, disabling the plugin...");
+			getLogger().severe("Contact the author of this plugin with this error to fix it");
 			ex.printStackTrace();
+			setEnabled(false);
 		}
 	}
 }
