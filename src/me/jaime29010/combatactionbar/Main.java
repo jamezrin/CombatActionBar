@@ -133,8 +133,10 @@ public class Main extends JavaPlugin implements Listener {
 				public void run() {
 					if (times > 0) {
 						sendActionBar(player,
-								color(message.replace("{left}", bar.substring(0, times * 2))
-										.replace("{right}", bar.substring(times * 2, bar.length()))
+								color(message
+										//Replacements for the message
+										.replace("{left}", bar.substring(0, times * character.length()))
+										.replace("{right}", bar.substring(times * character.length(), bar.length()))
 										.replace("{seconds}", Integer.toString(times))));
 						times--;
 					} else {
