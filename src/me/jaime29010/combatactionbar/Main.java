@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -133,6 +134,7 @@ public class Main extends JavaPlugin implements Listener {
 
 	public void sendTag(Player... players) {
 		for (final Player player : players) {
+			if(player.getGameMode().equals(GameMode.CREATIVE)) return;
 			//Canceling the previous task associated with the same player
 			if (log.containsKey(player.getName())) cancelTask(log.remove(player.getName()));
 			log.put(player.getName(), getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
