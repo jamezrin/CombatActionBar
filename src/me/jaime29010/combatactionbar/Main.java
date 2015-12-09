@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -25,8 +26,8 @@ public class Main extends JavaPlugin implements Listener {
 	private int seconds = 10;
 	private String bar;
 	private String nmsver;
-	private String message, logoutMessage, character;
-
+	private String tagMessage, untagMessage, character;
+	private SoundData tagSound, untagSound;
 	@Override
 	public void onEnable() {
 		// Registering the events
@@ -36,7 +37,7 @@ public class Main extends JavaPlugin implements Listener {
 		saveDefaultConfig();
 
 		// Getting the seconds
-		seconds = getConfig().getInt("timeout");
+		seconds = getConfig().getInt("time-untag");
 
 		// Character for the piece of message representing a second
 		character = getConfig().getString("character");
@@ -44,12 +45,32 @@ public class Main extends JavaPlugin implements Listener {
 		// Setting the bar length
 		bar = new String(new char[seconds]).replace("\0", character);
 
-		// Setting the message
-		message = getConfig().getString("message");
-
-		// Setting the final message
-		logoutMessage = getConfig().getString("safe-logout-message");
-
+		// Setting the tag message
+		tagMessage = getConfig().getString("on-tag.text");
+		
+		//Setting the tag sound
+		if("NONE".equals(getConfig().getString("on-tag.sound.type"))) {
+			tagSound = null;
+		} else {
+			tagSound = new SoundData(
+					Sound.valueOf(getConfig().getString("on-tag.sound.type")), 
+					(float) getConfig().getDouble("on-tag.sound.volume"),
+					(float) getConfig().getDouble("on-tag.sound.pitch"));
+		}
+		
+		// Setting the untag message
+		untagMessage = getConfig().getString("on-tag.text");
+		
+		//Setting the untag sound
+		if("NONE".equals(getConfig().getString("on-untag.sound.type"))) {
+			untagSound = null;
+		} else {
+			untagSound = new SoundData(
+					Sound.valueOf(getConfig().getString("on-untag.sound.type")), 
+					(float) getConfig().getDouble("on-untag.sound.volume"),
+					(float) getConfig().getDouble("on-untag.sound.pitch"));
+		}
+		
 		// Getting the nms package
 		nmsver = Bukkit.getServer().getClass().getPackage().getName();
 		nmsver = nmsver.substring(nmsver.lastIndexOf(".") + 1);
@@ -73,7 +94,7 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onHit(EntityDamageByEntityEvent event) {
-		//The tagging and sending of the actionbar
+		//The tagging and sending of the action bar
 		if (event.isCancelled()) return;
 		if (event.getEntity() instanceof Player) {
 			Player damaged = (Player) event.getEntity();
@@ -142,15 +163,23 @@ public class Main extends JavaPlugin implements Listener {
 				@Override
 				public void run() {
 					if (times > 0) {
-						sendActionBar(player, color(message
+						//Sending the tag bar
+						sendActionBar(player, color(tagMessage
 								//Replacements for the message
 								.replace("{left}", bar.substring(0, times * character.length()))
 								.replace("{right}", bar.substring(times * character.length(), bar.length()))
 								.replace("{seconds}", Integer.toString(times))));
+						//Sending the tag sound
+						if(tagSound != null)
+							player.playSound(player.getLocation(), tagSound.getSound(), tagSound.getVolume(), tagSound.getPitch());
 						times--;
 					} else {
-						//Sending the logout message and cancelling the task
-						sendActionBar(player, color(logoutMessage));
+						//Sending the untag bar
+						sendActionBar(player, color(untagMessage));
+						//Sending the untag sound
+						if(untagSound != null)
+							player.playSound(player.getLocation(), untagSound.getSound(), untagSound.getVolume(), untagSound.getPitch());
+						//Cancelling the task
 						cancelTask(log.remove(player.getName()));
 					}
 				}

@@ -1,5 +1,15 @@
-message: '&bCombat: &7&l[&a{left}&c{right}&7&l] &r&e{seconds} &b[sec]'
-safe-logout-message: '&aYou can now safely disconnect'
+on-tag:
+  text: '&bCombat: &7&l[&a{left}&c{right}&7&l] &r&e{seconds} &b[sec]'
+  sound:
+    type: NONE
+    volume: 1
+    pitch: 1
+on-untag:
+  text: '&aYou can now safely disconnect'
+  sound:
+    type: NONE
+    volume: 1
+    pitch: 1
 character: '||'
-timeout: 10
+time-untag: 10
 plugin-check: true
