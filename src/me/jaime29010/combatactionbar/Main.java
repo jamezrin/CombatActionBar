@@ -71,8 +71,7 @@ public class Main extends JavaPlugin implements Listener {
 		// Checking if there is any anti combat log plugin installed
 		if (getConfig().getBoolean("plugin-check")) {
 			if (!checkCompatiblePlugin()) {
-				getLogger().warning(
-						"No anti combat log plugin has been found, install one or disable plugin-check in the config");
+				getLogger().warning("No anti combat log plugin has been found, install one or disable plugin-check in the config");
 				setEnabled(false);
 			}
 		}
@@ -89,8 +88,7 @@ public class Main extends JavaPlugin implements Listener {
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onHit(EntityDamageByEntityEvent event) {
 		// The tagging and sending of the action bar
-		if (event.isCancelled())
-			return;
+		if (event.isCancelled()) return;
 		if (event.getEntity() instanceof Player) {
 			Player damaged = (Player) event.getEntity();
 			if (event.getDamager() instanceof Player) {
@@ -108,15 +106,13 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onDeath(PlayerDeathEvent event) {
-		// Removing the player from the log and canceling the task when the
-		// player dies
+		// Removing the player from the log and canceling the task when the player dies
 		checkBar(event.getEntity());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onQuit(PlayerQuitEvent event) {
-		// Removing the player from the log and canceling the task when the
-		// player quits
+		// Removing the player from the log and canceling the task when the player quits
 		checkBar(event.getPlayer());
 	}
 
@@ -129,11 +125,13 @@ public class Main extends JavaPlugin implements Listener {
 
 	public boolean checkCompatiblePlugin() {
 		// Checking for all the compatible plugins classes
-		for (String name : Arrays.asList("com.jackproehl.plugins.CombatLog", "net.techcable.combattag.CombatTag",
-				"com.mlgprocookie.acl.main", "me.NoChance.PvPManager.PvPManager",
+		for (String name : Arrays.asList(
+				"com.jackproehl.plugins.CombatLog", 
+				"net.techcable.combattag.CombatTag",
+				"com.mlgprocookie.acl.main", 
+				"me.NoChance.PvPManager.PvPManager",
 				"net.minelink.ctplus.CombatTagPlus")) {
-			if (ClassUtils.isPresent(name))
-				return true;
+			if (ClassUtils.isPresent(name)) return true;
 		}
 		return false;
 	}
@@ -150,27 +148,26 @@ public class Main extends JavaPlugin implements Listener {
 
 	public void sendTag(Player... players) {
 		for (final Player player : players) {
-			if (player.getGameMode().equals(GameMode.CREATIVE))
-				return;
+			if (player.getGameMode().equals(GameMode.CREATIVE)) return;
 			// Canceling the previous task associated with the same player
-			if (log.containsKey(player.getName()))
-				cancelTask(log.remove(player.getName()));
+			if (log.containsKey(player.getName()))  cancelTask(log.remove(player.getName()));
 			log.put(player.getName(), getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 				int times = seconds;
-
 				@Override
 				public void run() {
 					if (times > 0) {
 						// Sending the tag bar
-						sendActionBar(player,
-								color(tagText
-										// Replacements for the message
-										.replace("{left}", bar.substring(0, times * character.length()))
-										.replace("{right}", bar.substring(times * character.length(), bar.length()))
-										.replace("{seconds}", Integer.toString(times))));
+						sendActionBar(player, color(tagText
+								// Replacements for the message
+								.replace("{left}", bar.substring(0, times * character.length()))
+								.replace("{right}", bar.substring(times * character.length(), bar.length()))
+								.replace("{seconds}", Integer.toString(times))));
 						// Sending the tag sound
 						if (tagSound != null)
-							player.playSound(player.getLocation(), tagSound.getSound(), tagSound.getVolume(),
+							player.playSound(
+									player.getLocation(), 
+									tagSound.getSound(), 
+									tagSound.getVolume(),  
 									tagSound.getPitch());
 						// Decreasing the seconds count
 						times--;
@@ -179,7 +176,10 @@ public class Main extends JavaPlugin implements Listener {
 						sendActionBar(player, color(untagText));
 						// Sending the untag sound
 						if (untagSound != null)
-							player.playSound(player.getLocation(), untagSound.getSound(), untagSound.getVolume(),
+							player.playSound(
+									player.getLocation(), 
+									untagSound.getSound(), 
+									untagSound.getVolume(), 
 									untagSound.getPitch());
 						// Cancelling the task
 						cancelTask(log.remove(player.getName()));
