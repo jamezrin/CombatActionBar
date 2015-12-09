@@ -26,8 +26,9 @@ public class Main extends JavaPlugin implements Listener {
 	private int seconds = 10;
 	private String bar;
 	private String nmsver;
-	private String tagMessage, untagMessage, character;
+	private String tagText, untagText, character;
 	private SoundData tagSound, untagSound;
+
 	@Override
 	public void onEnable() {
 		// Registering the events
@@ -45,32 +46,24 @@ public class Main extends JavaPlugin implements Listener {
 		// Setting the bar length
 		bar = new String(new char[seconds]).replace("\0", character);
 
-		// Setting the tag message
-		tagMessage = getConfig().getString("on-tag.text");
-		
-		//Setting the tag sound
-		if("NONE".equals(getConfig().getString("on-tag.sound.type"))) {
-			tagSound = null;
-		} else {
-			tagSound = new SoundData(
-					Sound.valueOf(getConfig().getString("on-tag.sound.type")), 
-					(float) getConfig().getDouble("on-tag.sound.volume"),
-					(float) getConfig().getDouble("on-tag.sound.pitch"));
-		}
-		
-		// Setting the untag message
-		untagMessage = getConfig().getString("on-tag.text");
-		
-		//Setting the untag sound
-		if("NONE".equals(getConfig().getString("on-untag.sound.type"))) {
-			untagSound = null;
-		} else {
-			untagSound = new SoundData(
-					Sound.valueOf(getConfig().getString("on-untag.sound.type")), 
-					(float) getConfig().getDouble("on-untag.sound.volume"),
-					(float) getConfig().getDouble("on-untag.sound.pitch"));
-		}
-		
+		// Setting the tag text
+		tagText = getConfig().getString("on-tag.text");
+
+		// Setting the tag sound
+		tagSound = "NONE".equals(getConfig().getString("on-tag.sound.type")) ? null : new SoundData(
+				Sound.valueOf(getConfig().getString("on-tag.sound.type")),
+				(float) getConfig().getDouble("on-tag.sound.volume"), 
+				(float) getConfig().getDouble("on-tag.sound.pitch"));
+
+		// Setting the untag text
+		untagText = getConfig().getString("on-untag.text");
+
+		// Setting the untag sound
+		untagSound = "NONE".equals(getConfig().getString("on-untag.sound.type")) ? null : new SoundData(
+				Sound.valueOf(getConfig().getString("on-untag.sound.type")),
+				(float) getConfig().getDouble("on-untag.sound.volume"), 
+				(float) getConfig().getDouble("on-untag.sound.pitch"));
+
 		// Getting the nms package
 		nmsver = Bukkit.getServer().getClass().getPackage().getName();
 		nmsver = nmsver.substring(nmsver.lastIndexOf(".") + 1);
@@ -78,7 +71,8 @@ public class Main extends JavaPlugin implements Listener {
 		// Checking if there is any anti combat log plugin installed
 		if (getConfig().getBoolean("plugin-check")) {
 			if (!checkCompatiblePlugin()) {
-				getLogger().warning("No anti combat log plugin has been found, install one or disable plugin-check in the config");
+				getLogger().warning(
+						"No anti combat log plugin has been found, install one or disable plugin-check in the config");
 				setEnabled(false);
 			}
 		}
@@ -86,7 +80,7 @@ public class Main extends JavaPlugin implements Listener {
 
 	@Override
 	public void onDisable() {
-		//Cleaning and cancelling all the tasks
+		// Cleaning and cancelling all the tasks
 		for (Entry<String, Integer> entry : log.entrySet()) {
 			cancelTask(log.remove(entry.getKey()));
 		}
@@ -94,8 +88,9 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onHit(EntityDamageByEntityEvent event) {
-		//The tagging and sending of the action bar
-		if (event.isCancelled()) return;
+		// The tagging and sending of the action bar
+		if (event.isCancelled())
+			return;
 		if (event.getEntity() instanceof Player) {
 			Player damaged = (Player) event.getEntity();
 			if (event.getDamager() instanceof Player) {
@@ -113,81 +108,88 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onDeath(PlayerDeathEvent event) {
-		//Removing the player from the log and canceling the task when the player dies
+		// Removing the player from the log and canceling the task when the
+		// player dies
 		checkBar(event.getEntity());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onQuit(PlayerQuitEvent event) {
-		//Removing the player from the log and canceling the task when the player quits
+		// Removing the player from the log and canceling the task when the
+		// player quits
 		checkBar(event.getPlayer());
 	}
 
 	public void checkBar(Player player) {
-		//Removes the player from the log and cancels the task
+		// Removes the player from the log and cancels the task
 		if (log.containsKey(player.getName())) {
 			cancelTask(log.remove(player.getName()));
 		}
 	}
 
 	public boolean checkCompatiblePlugin() {
-		//Checking for all the compatible plugins classes
-		for (String name : Arrays.asList(
-				"com.jackproehl.plugins.CombatLog", 
-				"net.techcable.combattag.CombatTag",
-				"com.mlgprocookie.acl.main", 
-				"me.NoChance.PvPManager.PvPManager",
+		// Checking for all the compatible plugins classes
+		for (String name : Arrays.asList("com.jackproehl.plugins.CombatLog", "net.techcable.combattag.CombatTag",
+				"com.mlgprocookie.acl.main", "me.NoChance.PvPManager.PvPManager",
 				"net.minelink.ctplus.CombatTagPlus")) {
-			if (ClassUtils.isPresent(name)) return true;
+			if (ClassUtils.isPresent(name))
+				return true;
 		}
 		return false;
 	}
 
-	//Adding color to messages
+	// Adding color to messages
 	public String color(String string) {
 		return ChatColor.translateAlternateColorCodes('&', string);
 	}
-	
-	//Canceling a task with its id
+
+	// Canceling a task with its id
 	public void cancelTask(int taskId) {
 		getServer().getScheduler().cancelTask(taskId);
 	}
 
 	public void sendTag(Player... players) {
 		for (final Player player : players) {
-			if(player.getGameMode().equals(GameMode.CREATIVE)) return;
-			//Canceling the previous task associated with the same player
-			if (log.containsKey(player.getName())) cancelTask(log.remove(player.getName()));
+			if (player.getGameMode().equals(GameMode.CREATIVE))
+				return;
+			// Canceling the previous task associated with the same player
+			if (log.containsKey(player.getName()))
+				cancelTask(log.remove(player.getName()));
 			log.put(player.getName(), getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 				int times = seconds;
+
 				@Override
 				public void run() {
 					if (times > 0) {
-						//Sending the tag bar
-						sendActionBar(player, color(tagMessage
-								//Replacements for the message
-								.replace("{left}", bar.substring(0, times * character.length()))
-								.replace("{right}", bar.substring(times * character.length(), bar.length()))
-								.replace("{seconds}", Integer.toString(times))));
-						//Sending the tag sound
-						if(tagSound != null)
-							player.playSound(player.getLocation(), tagSound.getSound(), tagSound.getVolume(), tagSound.getPitch());
+						// Sending the tag bar
+						sendActionBar(player,
+								color(tagText
+										// Replacements for the message
+										.replace("{left}", bar.substring(0, times * character.length()))
+										.replace("{right}", bar.substring(times * character.length(), bar.length()))
+										.replace("{seconds}", Integer.toString(times))));
+						// Sending the tag sound
+						if (tagSound != null)
+							player.playSound(player.getLocation(), tagSound.getSound(), tagSound.getVolume(),
+									tagSound.getPitch());
+						// Decreasing the seconds count
 						times--;
 					} else {
-						//Sending the untag bar
-						sendActionBar(player, color(untagMessage));
-						//Sending the untag sound
-						if(untagSound != null)
-							player.playSound(player.getLocation(), untagSound.getSound(), untagSound.getVolume(), untagSound.getPitch());
-						//Cancelling the task
+						// Sending the untag bar
+						sendActionBar(player, color(untagText));
+						// Sending the untag sound
+						if (untagSound != null)
+							player.playSound(player.getLocation(), untagSound.getSound(), untagSound.getVolume(),
+									untagSound.getPitch());
+						// Cancelling the task
 						cancelTask(log.remove(player.getName()));
 					}
 				}
 			}, 0, 20));
 		}
 	}
-	
-	//Method taken from ActionBarAPI
+
+	// Method taken from ActionBarAPI
 	private void sendActionBar(Player player, String message) {
 		try {
 			Class<?> c1 = Class.forName("org.bukkit.craftbukkit." + nmsver + ".entity.CraftPlayer");
