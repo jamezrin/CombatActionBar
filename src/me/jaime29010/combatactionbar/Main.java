@@ -24,10 +24,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class Main extends JavaPlugin implements Listener {
 	private final Map<String, Integer> log = new HashMap<String, Integer>();
 	private int seconds = 10;
-	private String bar;
 	private String nmsver;
-	private String tagText, untagText, character;
-	private SoundData tagSound, untagSound;
+	private String tagText, untagText, character, bar;
+	private SoundInfo tagSound, untagSound;
 
 	@Override
 	public void onEnable() {
@@ -50,7 +49,7 @@ public class Main extends JavaPlugin implements Listener {
 		tagText = getConfig().getString("on-tag.text");
 
 		// Setting the tag sound
-		tagSound = "NONE".equals(getConfig().getString("on-tag.sound.type")) ? null : new SoundData(
+		tagSound = "NONE".equals(getConfig().getString("on-tag.sound.type")) ? null : new SoundInfo(
 				Sound.valueOf(getConfig().getString("on-tag.sound.type")),
 				(float) getConfig().getDouble("on-tag.sound.volume"), 
 				(float) getConfig().getDouble("on-tag.sound.pitch"));
@@ -59,7 +58,7 @@ public class Main extends JavaPlugin implements Listener {
 		untagText = getConfig().getString("on-untag.text");
 
 		// Setting the untag sound
-		untagSound = "NONE".equals(getConfig().getString("on-untag.sound.type")) ? null : new SoundData(
+		untagSound = "NONE".equals(getConfig().getString("on-untag.sound.type")) ? null : new SoundInfo(
 				Sound.valueOf(getConfig().getString("on-untag.sound.type")),
 				(float) getConfig().getDouble("on-untag.sound.volume"), 
 				(float) getConfig().getDouble("on-untag.sound.pitch"));
@@ -93,12 +92,15 @@ public class Main extends JavaPlugin implements Listener {
 			Player damaged = (Player) event.getEntity();
 			if (event.getDamager() instanceof Player) {
 				Player damager = (Player) event.getDamager();
-				sendTag(damaged, damager);
+				sendTag(damaged);
+				if(getConfig().getBoolean("send-damager")) sendTag(damager);
 			} else if (event.getDamager() instanceof Projectile) {
 				Projectile projectile = (Projectile) event.getDamager();
 				if (projectile.getShooter() instanceof Player) {
 					Player damager = (Player) projectile.getShooter();
-					sendTag(damaged, damager);
+					if(damager.equals(damaged)) return;
+					sendTag(damaged);
+					if(getConfig().getBoolean("send-damager")) sendTag(damager);
 				}
 			}
 		}
@@ -149,8 +151,8 @@ public class Main extends JavaPlugin implements Listener {
 	public void sendTag(Player... players) {
 		for (final Player player : players) {
 			if (player.getGameMode().equals(GameMode.CREATIVE)) return;
-			// Canceling the previous task associated with the same player
-			if (log.containsKey(player.getName()))  cancelTask(log.remove(player.getName()));
+			// Canceling the previous task associated with the player
+			if (log.containsKey(player.getName())) cancelTask(log.remove(player.getName()));
 			log.put(player.getName(), getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 				int times = seconds;
 				@Override
@@ -163,25 +165,15 @@ public class Main extends JavaPlugin implements Listener {
 								.replace("{right}", bar.substring(times * character.length(), bar.length()))
 								.replace("{seconds}", Integer.toString(times))));
 						// Sending the tag sound
-						if (tagSound != null)
-							player.playSound(
-									player.getLocation(), 
-									tagSound.getSound(), 
-									tagSound.getVolume(),  
-									tagSound.getPitch());
+						if (tagSound != null) tagSound.play(player);
 						// Decreasing the seconds count
 						times--;
 					} else {
 						// Sending the untag bar
 						sendActionBar(player, color(untagText));
 						// Sending the untag sound
-						if (untagSound != null)
-							player.playSound(
-									player.getLocation(), 
-									untagSound.getSound(), 
-									untagSound.getVolume(), 
-									untagSound.getPitch());
-						// Cancelling the task
+						if (untagSound != null) untagSound.play(player);
+						// Cancelling the task associated with the player
 						cancelTask(log.remove(player.getName()));
 					}
 				}

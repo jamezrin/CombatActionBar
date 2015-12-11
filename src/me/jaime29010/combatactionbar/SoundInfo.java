@@ -1,11 +1,12 @@
 package me.jaime29010.combatactionbar;
 
 import org.bukkit.Sound;
+import org.bukkit.entity.Player;
 
-public class SoundData {
+public class SoundInfo {
 	private final Sound sound;
 	private final float volume, pitch;
-	public SoundData(Sound sound, float volume, float pitch) {
+	public SoundInfo(Sound sound, float volume, float pitch) {
 		this.sound = sound;
 		this.volume = volume;
 		this.pitch = pitch;
@@ -21,5 +22,9 @@ public class SoundData {
 	
 	public float getPitch() {
 		return pitch;
+	}
+	
+	public void play(Player player) {
+		player.playSound(player.getLocation(), sound, volume, pitch);
 	}
 }
