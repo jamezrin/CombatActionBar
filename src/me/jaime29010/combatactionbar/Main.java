@@ -56,7 +56,7 @@ public class Main extends JavaPlugin implements Listener {
 
 		// Setting the untag text
 		untagText = getConfig().getString("on-untag.text");
-
+		
 		// Setting the untag sound
 		untagSound = "NONE".equals(getConfig().getString("on-untag.sound.type")) ? null : new SoundInfo(
 				Sound.valueOf(getConfig().getString("on-untag.sound.type")),
