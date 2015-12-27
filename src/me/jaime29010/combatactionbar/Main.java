@@ -2,7 +2,6 @@ package me.jaime29010.combatactionbar;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -11,6 +10,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Sound;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -30,6 +31,15 @@ public class Main extends JavaPlugin implements Listener {
 
 	@Override
 	public void onEnable() {
+		enablePlugin();
+	}
+
+	@Override
+	public void onDisable() {
+		disablePlugin();
+	}
+
+	public void enablePlugin() {
 		// Registering the events
 		getServer().getPluginManager().registerEvents(this, this);
 
@@ -51,21 +61,24 @@ public class Main extends JavaPlugin implements Listener {
 		// Setting the tag sound
 		tagSound = "NONE".equals(getConfig().getString("on-tag.sound.type")) ? null : new SoundInfo(
 				Sound.valueOf(getConfig().getString("on-tag.sound.type")),
-				(float) getConfig().getDouble("on-tag.sound.volume"), 
-				(float) getConfig().getDouble("on-tag.sound.pitch"));
+						(float) getConfig().getDouble("on-tag.sound.volume"),
+						(float) getConfig().getDouble("on-tag.sound.pitch"));
 
 		// Setting the untag text
 		untagText = getConfig().getString("on-untag.text");
-		
+
 		// Setting the untag sound
 		untagSound = "NONE".equals(getConfig().getString("on-untag.sound.type")) ? null : new SoundInfo(
 				Sound.valueOf(getConfig().getString("on-untag.sound.type")),
-				(float) getConfig().getDouble("on-untag.sound.volume"), 
-				(float) getConfig().getDouble("on-untag.sound.pitch"));
+						(float) getConfig().getDouble("on-untag.sound.volume"),
+						(float) getConfig().getDouble("on-untag.sound.pitch"));
 
 		// Getting the nms package
-		nmsver = Bukkit.getServer().getClass().getPackage().getName();
+		nmsver = getServer().getClass().getPackage().getName();
 		nmsver = nmsver.substring(nmsver.lastIndexOf(".") + 1);
+
+		// Registering the command
+		getCommand("combatactionbar").setExecutor(new MainCommand(this));
 
 		// Checking if there is any anti combat log plugin installed
 		if (getConfig().getBoolean("plugin-check")) {
@@ -76,8 +89,7 @@ public class Main extends JavaPlugin implements Listener {
 		}
 	}
 
-	@Override
-	public void onDisable() {
+	public void disablePlugin() {
 		// Cleaning and cancelling all the tasks
 		for (Entry<String, Integer> entry : log.entrySet()) {
 			cancelTask(log.remove(entry.getKey()));
@@ -93,14 +105,14 @@ public class Main extends JavaPlugin implements Listener {
 			if (event.getDamager() instanceof Player) {
 				Player damager = (Player) event.getDamager();
 				sendTag(damaged);
-				if(getConfig().getBoolean("send-damager")) sendTag(damager);
+				if (getConfig().getBoolean("send-damager")) sendTag(damager);
 			} else if (event.getDamager() instanceof Projectile) {
 				Projectile projectile = (Projectile) event.getDamager();
 				if (projectile.getShooter() instanceof Player) {
 					Player damager = (Player) projectile.getShooter();
-					if(damager.equals(damaged)) return;
+					if (damager.equals(damaged)) return;
 					sendTag(damaged);
-					if(getConfig().getBoolean("send-damager")) sendTag(damager);
+					if (getConfig().getBoolean("send-damager")) sendTag(damager);
 				}
 			}
 		}
@@ -108,13 +120,15 @@ public class Main extends JavaPlugin implements Listener {
 
 	@EventHandler
 	public void onDeath(PlayerDeathEvent event) {
-		// Removing the player from the log and canceling the task when the player dies
+		// Removing the player from the log and canceling the task when the
+		// player dies
 		checkBar(event.getEntity());
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onQuit(PlayerQuitEvent event) {
-		// Removing the player from the log and canceling the task when the player quits
+		// Removing the player from the log and canceling the task when the
+		// player quits
 		checkBar(event.getPlayer());
 	}
 
@@ -127,13 +141,8 @@ public class Main extends JavaPlugin implements Listener {
 
 	public boolean checkCompatiblePlugin() {
 		// Checking for all the compatible plugins classes
-		for (String name : Arrays.asList(
-				"com.jackproehl.plugins.CombatLog", 
-				"net.techcable.combattag.CombatTag",
-				"com.mlgprocookie.acl.main", 
-				"me.NoChance.PvPManager.PvPManager",
-				"net.minelink.ctplus.CombatTagPlus")) {
-			if (ClassUtils.isPresent(name)) return true;
+		for (String name : new String[] { "CombatLog", "CombatTag", "CombatTagPlus", "PvPManager", "AntiCombatLog" }) {
+			if (getServer().getPluginManager().getPlugin(name) != null) return true;
 		}
 		return false;
 	}
@@ -160,19 +169,24 @@ public class Main extends JavaPlugin implements Listener {
 					if (times > 0) {
 						// Sending the tag bar
 						sendActionBar(player, color(tagText
-								// Replacements for the message
-								.replace("{left}", bar.substring(0, times * character.length()))
-								.replace("{right}", bar.substring(times * character.length(), bar.length()))
-								.replace("{seconds}", Integer.toString(times))));
+								
+						// Replacements for the message
+						.replace("{left}", bar.substring(0, times * character.length()))
+						.replace("{right}", bar.substring(times * character.length(), bar.length()))
+						.replace("{seconds}", Integer.toString(times))));
+						
 						// Sending the tag sound
 						if (tagSound != null) tagSound.play(player);
+						
 						// Decreasing the seconds count
 						times--;
 					} else {
 						// Sending the untag bar
 						sendActionBar(player, color(untagText));
+						
 						// Sending the untag sound
 						if (untagSound != null) untagSound.play(player);
+						
 						// Cancelling the task associated with the player
 						cancelTask(log.remove(player.getName()));
 					}
