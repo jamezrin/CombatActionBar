@@ -1,6 +1,6 @@
 name: CombatActionBar
 main: me.jaime29010.combatactionbar.Main
-version: 1.5.4
+version: 1.5.5
 author: jaime29010
 commands:
   combatactionbar:

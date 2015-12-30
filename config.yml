@@ -16,3 +16,6 @@ character: '||'
 time-untag: 10
 plugin-check: true
 send-damager: true
+disabled-worlds:
+  - disabledworld1
+  - disabledworld2

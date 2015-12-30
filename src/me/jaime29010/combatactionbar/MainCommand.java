@@ -16,7 +16,8 @@ public class MainCommand implements CommandExecutor {
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
 		if(sender instanceof Player) {
 			Player player = (Player) sender;
-			main.disablePlugin();
+			//Why? There is nothing wrong leaving the tasks running...
+			//main.disablePlugin();
 			main.reloadConfig();
 			main.enablePlugin();
 			player.sendMessage(ChatColor.GREEN + "The plugin has been reloaded");

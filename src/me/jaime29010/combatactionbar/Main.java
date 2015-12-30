@@ -2,16 +2,16 @@ package me.jaime29010.combatactionbar;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Sound;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -28,6 +28,7 @@ public class Main extends JavaPlugin implements Listener {
 	private String nmsver;
 	private String tagText, untagText, character, bar;
 	private SoundInfo tagSound, untagSound;
+	private List<World> disabledWorlds = new ArrayList<>();
 
 	@Override
 	public void onEnable() {
@@ -72,7 +73,13 @@ public class Main extends JavaPlugin implements Listener {
 				Sound.valueOf(getConfig().getString("on-untag.sound.type")),
 						(float) getConfig().getDouble("on-untag.sound.volume"),
 						(float) getConfig().getDouble("on-untag.sound.pitch"));
-
+		
+		//Setting the disabled worlds
+		for(String name : getConfig().getStringList("disabled-worlds")) {
+			World world = getServer().getWorld(name);
+			if(name != null)
+				disabledWorlds.add(world);
+		}
 		// Getting the nms package
 		nmsver = getServer().getClass().getPackage().getName();
 		nmsver = nmsver.substring(nmsver.lastIndexOf(".") + 1);
@@ -160,6 +167,7 @@ public class Main extends JavaPlugin implements Listener {
 	public void sendTag(Player... players) {
 		for (final Player player : players) {
 			if (player.getGameMode().equals(GameMode.CREATIVE)) return;
+			if (disabledWorlds.contains(player.getWorld())) return;
 			// Canceling the previous task associated with the player
 			if (log.containsKey(player.getName())) cancelTask(log.remove(player.getName()));
 			log.put(player.getName(), getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
