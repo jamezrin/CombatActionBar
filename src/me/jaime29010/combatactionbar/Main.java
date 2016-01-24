@@ -11,7 +11,6 @@ import java.util.Map.Entry;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Sound;
-import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -28,7 +27,7 @@ public class Main extends JavaPlugin implements Listener {
 	private String nmsver;
 	private String tagText, untagText, character, bar;
 	private SoundInfo tagSound, untagSound;
-	private List<World> disabledWorlds = new ArrayList<>();
+	private List<String> disabledWorlds = new ArrayList<>();
 
 	@Override
 	public void onEnable() {
@@ -76,10 +75,9 @@ public class Main extends JavaPlugin implements Listener {
 		
 		//Setting the disabled worlds
 		for(String name : getConfig().getStringList("disabled-worlds")) {
-			World world = getServer().getWorld(name);
-			if(name != null)
-				disabledWorlds.add(world);
+			disabledWorlds.add(name);
 		}
+		
 		// Getting the nms package
 		nmsver = getServer().getClass().getPackage().getName();
 		nmsver = nmsver.substring(nmsver.lastIndexOf(".") + 1);
@@ -163,18 +161,32 @@ public class Main extends JavaPlugin implements Listener {
 	public void cancelTask(int taskId) {
 		getServer().getScheduler().cancelTask(taskId);
 	}
+	
+	public boolean checkDisabledWorld(Player player) {
+		return disabledWorlds.contains(player.getWorld().getName());
+	}
 
 	public void sendTag(Player... players) {
 		for (final Player player : players) {
+			// Check for player in creative mode
 			if (player.getGameMode().equals(GameMode.CREATIVE)) return;
-			if (disabledWorlds.contains(player.getWorld())) return;
+			
+			// Not executing the task if the player is in a disabled world
+			if (checkDisabledWorld(player)) return;
+			
 			// Canceling the previous task associated with the player
 			if (log.containsKey(player.getName())) cancelTask(log.remove(player.getName()));
+			
+			// Adding and executing the task
 			log.put(player.getName(), getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 				int times = seconds;
 				@Override
 				public void run() {
 					if (times > 0) {
+						// Canceling the task if the player is in a disabled world
+						if (checkDisabledWorld(player)) 
+							cancelTask(log.remove(player.getName()));
+						
 						// Sending the tag bar
 						sendActionBar(player, color(tagText
 								

@@ -3,7 +3,7 @@ package me.jaime29010.combatactionbar;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
-public class SoundInfo {
+public final class SoundInfo {
 	private final Sound sound;
 	private final float volume, pitch;
 	public SoundInfo(Sound sound, float volume, float pitch) {
