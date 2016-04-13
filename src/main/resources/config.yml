@@ -1,0 +1,32 @@
+# The character (or set of characters) representing a second
+character: '||'
+
+# The amount of seconds before the player is not tagged anymore
+time-untag: 10
+
+# Check if officially supported plugins are installed on the server
+plugin-check: true
+
+# Check if we should send the bar to the damager too
+send-damager: true
+
+# The worlds where the bar should not show
+disabled-worlds:
+  - disabledworld1
+  - disabledworld2
+
+# This happens when someone damages the player and ends when the specified time has passed
+on-tag:
+  text: '&bCombat: &7&l[&a{left}&c{right}&7&l] &r&e{seconds} &b[sec]'
+  sound:
+    type: NONE
+    volume: 1
+    pitch: 1
+
+# This happens when the specified time has passed
+on-untag:
+  text: '&aYou can now safely disconnect'
+  sound:
+    type: NONE
+    volume: 1
+    pitch: 1

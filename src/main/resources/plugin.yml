@@ -1,6 +1,6 @@
 name: CombatActionBar
 main: me.jaime29010.combatactionbar.Main
-version: 1.5.6
+version: ${project.version}
 author: jaime29010
 commands:
   combatactionbar:
