@@ -6,7 +6,7 @@
 
     <groupId>me.jaime29010</groupId>
     <artifactId>combatactionbar</artifactId>
-    <version>1.5.7</version>
+    <version>1.6.2</version>
     <build>
         <defaultGoal>clean install</defaultGoal>
         <plugins>
