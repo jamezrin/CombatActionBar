@@ -51,7 +51,7 @@ public class Main extends JavaPlugin implements Listener {
         config = ConfigurationManager.loadConfig("config.yml", this);
 
         // Checking if there is any anti combat log plugin installed
-        if (getConfig().getBoolean("plugin-check")) {
+        if (config.getBoolean("plugin-check")) {
             if (tryHook()) {
                 duration = hook.getDuration();
             } else {
@@ -59,35 +59,35 @@ public class Main extends JavaPlugin implements Listener {
                 setEnabled(false);
             }
         } else {
-            duration = getConfig().getInt("time-untag");
+            duration = config.getInt("time-untag");
         }
 
         // Character for the piece of message representing a second
-        character = getConfig().getString("character");
+        character = config.getString("character");
 
         // Setting the bar length
         bar = new String(new char[duration]).replace("\0", character);
 
         // Setting the tag text
-        tagText = getConfig().getString("on-tag.text");
+        tagText = config.getString("on-tag.text");
 
         // Setting the tag sound
-        tagSound = "NONE".equals(getConfig().getString("on-tag.sound.type")) ? null : new SoundInfo(
-                Sound.valueOf(getConfig().getString("on-tag.sound.type")),
-                (float) getConfig().getDouble("on-tag.sound.volume"),
-                (float) getConfig().getDouble("on-tag.sound.pitch"));
+        tagSound = "NONE".equals(config.getString("on-tag.sound.type")) ? null : new SoundInfo(
+                Sound.valueOf(config.getString("on-tag.sound.type")),
+                (float) config.getDouble("on-tag.sound.volume"),
+                (float) config.getDouble("on-tag.sound.pitch"));
 
         // Setting the untag text
-        untagText = getConfig().getString("on-untag.text");
+        untagText = config.getString("on-untag.text");
 
         // Setting the untag sound
-        untagSound = "NONE".equals(getConfig().getString("on-untag.sound.type")) ? null : new SoundInfo(
-                Sound.valueOf(getConfig().getString("on-untag.sound.type")),
-                (float) getConfig().getDouble("on-untag.sound.volume"),
-                (float) getConfig().getDouble("on-untag.sound.pitch"));
+        untagSound = "NONE".equals(config.getString("on-untag.sound.type")) ? null : new SoundInfo(
+                Sound.valueOf(config.getString("on-untag.sound.type")),
+                (float) config.getDouble("on-untag.sound.volume"),
+                (float) config.getDouble("on-untag.sound.pitch"));
 
         //Setting the disabled worlds
-        for (String name : getConfig().getStringList("disabled-worlds")) {
+        for (String name : config.getStringList("disabled-worlds")) {
             disabledWorlds.add(name);
         }
 
@@ -110,7 +110,6 @@ public class Main extends JavaPlugin implements Listener {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (sender instanceof Player) {
             Player player = (Player) sender;
-            reloadConfig();
             enablePlugin();
             player.sendMessage(ChatColor.GREEN + "The plugin has been reloaded");
         } else {
@@ -128,14 +127,14 @@ public class Main extends JavaPlugin implements Listener {
             if (event.getDamager() instanceof Player) {
                 Player damager = (Player) event.getDamager();
                 sendTag(damaged);
-                if (getConfig().getBoolean("send-damager")) sendTag(damager);
+                if (config.getBoolean("send-damager")) sendTag(damager);
             } else if (event.getDamager() instanceof Projectile) {
                 Projectile projectile = (Projectile) event.getDamager();
                 if (projectile.getShooter() instanceof Player) {
                     Player damager = (Player) projectile.getShooter();
                     if (damager.equals(damaged)) return;
                     sendTag(damaged);
-                    if (getConfig().getBoolean("send-damager")) sendTag(damager);
+                    if (config.getBoolean("send-damager")) sendTag(damager);
                 }
             }
         }

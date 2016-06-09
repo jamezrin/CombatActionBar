@@ -17,9 +17,11 @@ public enum HookType {
 
     private final String name;
     private final Class<? extends PluginHook> hook;
+    private final Plugin plugin;
     HookType(String name, Class<? extends PluginHook> hook) {
         this.name = name;
         this.hook = hook;
+        plugin = Bukkit.getPluginManager().getPlugin(name);
     }
 
     public String getPluginName() {
@@ -27,7 +29,7 @@ public enum HookType {
     }
 
     public Plugin getPlugin() {
-        return Bukkit.getPluginManager().getPlugin(name);
+        return plugin;
     }
 
     public Class<? extends PluginHook> getHook() {
@@ -35,7 +37,6 @@ public enum HookType {
     }
 
     public boolean check() {
-        Plugin plugin = getPlugin();
         return plugin != null && plugin.isEnabled();
     }
 }
