@@ -4,13 +4,13 @@ character: '||'
 # The amount of seconds before the player is not tagged anymore
 time-untag: 10
 
-# Check if officially supported plugins are installed on the server
+# Check if officially supported plugins are installed on the server and hook to them
 plugin-check: true
 
 # Check if we should send the bar to the damager too
 send-damager: true
 
-# The worlds where the bar should not show
+# The worlds where the bar should not appear
 disabled-worlds:
   - disabledworld1
   - disabledworld2

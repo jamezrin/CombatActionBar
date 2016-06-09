@@ -2,6 +2,7 @@ name: CombatActionBar
 main: me.jaime29010.combatactionbar.Main
 version: ${project.version}
 author: jaime29010
+softdepend: [AntiCombatLog, CombatLog, CombatTag, CombatTagPlus, GriefPrevention, PvPManager]
 commands:
   combatactionbar:
     description: Command for reloading the config of CombatActionBar

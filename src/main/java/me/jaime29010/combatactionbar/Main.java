@@ -1,8 +1,13 @@
 package me.jaime29010.combatactionbar;
 
+import me.jaime29010.combatactionbar.hooks.HookType;
+import me.jaime29010.combatactionbar.hooks.PluginHook;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Sound;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -23,11 +28,13 @@ import java.util.Map.Entry;
 
 public class Main extends JavaPlugin implements Listener {
     private final Map<String, Integer> log = new HashMap<>();
-    private int seconds = 10;
+    private FileConfiguration config;
+    private int duration = 10;
     private String nmsver;
     private String tagText, untagText, character, bar;
     private SoundInfo tagSound, untagSound;
     private List<String> disabledWorlds = new ArrayList<>();
+    private PluginHook hook;
 
     @Override
     public void onEnable() {
@@ -40,20 +47,26 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     public void enablePlugin() {
-        // Registering the events
-        getServer().getPluginManager().registerEvents(this, this);
+        // Loading the configuration
+        config = ConfigurationManager.loadConfig("config.yml", this);
 
-        // Saving the default config
-        saveDefaultConfig();
-
-        // Getting the seconds
-        seconds = getConfig().getInt("time-untag");
+        // Checking if there is any anti combat log plugin installed
+        if (getConfig().getBoolean("plugin-check")) {
+            if (tryHook()) {
+                duration = hook.getDuration();
+            } else {
+                getLogger().warning("No anti combat log plugin has been found, install one or disable plugin-check in the config");
+                setEnabled(false);
+            }
+        } else {
+            duration = getConfig().getInt("time-untag");
+        }
 
         // Character for the piece of message representing a second
         character = getConfig().getString("character");
 
         // Setting the bar length
-        bar = new String(new char[seconds]).replace("\0", character);
+        bar = new String(new char[duration]).replace("\0", character);
 
         // Setting the tag text
         tagText = getConfig().getString("on-tag.text");
@@ -82,16 +95,8 @@ public class Main extends JavaPlugin implements Listener {
         nmsver = getServer().getClass().getPackage().getName();
         nmsver = nmsver.substring(nmsver.lastIndexOf(".") + 1);
 
-        // Registering the command
-        getCommand("combatactionbar").setExecutor(new MainCommand(this));
-
-        // Checking if there is any anti combat log plugin installed
-        if (getConfig().getBoolean("plugin-check")) {
-            if (!checkCompatiblePlugin()) {
-                getLogger().warning("No anti combat log plugin has been found, install one or disable plugin-check in the config");
-                setEnabled(false);
-            }
-        }
+        // Registering the events
+        getServer().getPluginManager().registerEvents(this, this);
     }
 
     public void disablePlugin() {
@@ -99,6 +104,19 @@ public class Main extends JavaPlugin implements Listener {
         for (Entry<String, Integer> entry : log.entrySet()) {
             cancelTask(log.remove(entry.getKey()));
         }
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        if (sender instanceof Player) {
+            Player player = (Player) sender;
+            reloadConfig();
+            enablePlugin();
+            player.sendMessage(ChatColor.GREEN + "The plugin has been reloaded");
+        } else {
+            sender.sendMessage("This command can only be executed by a player");
+        }
+        return true;
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
@@ -125,15 +143,13 @@ public class Main extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
-        // Removing the player from the log and canceling the task when the
-        // player dies
+        // Removing the player from the log and canceling the task when the player dies
         checkBar(event.getEntity());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onQuit(PlayerQuitEvent event) {
-        // Removing the player from the log and canceling the task when the
-        // player quits
+        // Removing the player from the log and canceling the task when the player quits
         checkBar(event.getPlayer());
     }
 
@@ -144,26 +160,30 @@ public class Main extends JavaPlugin implements Listener {
         }
     }
 
-    public boolean checkCompatiblePlugin() {
-        // Checking for all the compatible plugins classes
-        for (String name : new String[]{"CombatLog", "CombatTag", "CombatTagPlus", "PvPManager", "AntiCombatLog"}) {
-            if (getServer().getPluginManager().getPlugin(name) != null) return true;
+    public boolean tryHook() {
+        for (HookType type : HookType.values()) {
+            if (type.check()) {
+                try {
+                    hook = type.getHook().newInstance();
+                    hook.hook(type.getPlugin(), getServer().getPluginManager());
+                    getLogger().info("Hooked into " + hook.getClass());
+                } catch (InstantiationException | IllegalAccessException e) {
+                    e.printStackTrace();
+                }
+                return true;
+            }
         }
         return false;
     }
 
     // Adding color to messages
-    public String color(String string) {
+    private String color(String string) {
         return ChatColor.translateAlternateColorCodes('&', string);
     }
 
     // Canceling a task with its id
     public void cancelTask(int taskId) {
         getServer().getScheduler().cancelTask(taskId);
-    }
-
-    public boolean checkDisabledWorld(Player player) {
-        return disabledWorlds.contains(player.getWorld().getName());
     }
 
     public void sendTag(Player... players) {
@@ -173,44 +193,49 @@ public class Main extends JavaPlugin implements Listener {
             if (player.getGameMode() == GameMode.CREATIVE) continue;
 
             // Not executing the task if the player is in a disabled world
-            if (checkDisabledWorld(player)) continue;
+            if (disabledWorlds.contains(player.getWorld().getName())) continue;
 
             // Not executing the task if the player has the nobar permission
             if (player.hasPermission("combatactionbar.nobar")) continue;
 
             // Canceling the previous task associated with the player
-            if (log.containsKey(player.getName())) cancelTask(log.remove(player.getName()));
+            if (log.containsKey(player.getName())) {
+                cancelTask(log.remove(player.getName()));
+            }
 
             // Adding and executing the task
             log.put(player.getName(), getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-                int times = seconds;
-
+                int times = duration;
                 @Override
                 public void run() {
                     if (times > 0) {
                         // Canceling the task if the player is in a disabled world
-                        if (checkDisabledWorld(player))
+                        if (disabledWorlds.contains(player.getWorld().getName())) {
                             cancelTask(log.remove(player.getName()));
+                        }
 
                         // Sending the tag bar
                         sendActionBar(player, color(tagText
-
                                 // Replacements for the message
                                 .replace("{left}", bar.substring(0, times * character.length()))
                                 .replace("{right}", bar.substring(times * character.length(), bar.length()))
-                                .replace("{seconds}", Integer.toString(times))));
+                                .replace("{duration}", String.valueOf(times))));
 
                         // Sending the tag sound
-                        if (tagSound != null) tagSound.play(player);
+                        if (tagSound != null) {
+                            tagSound.play(player);
+                        }
 
-                        // Decreasing the seconds count
+                        // Decreasing the duration count
                         times--;
                     } else {
                         // Sending the untag bar
                         sendActionBar(player, color(untagText));
 
                         // Sending the untag sound
-                        if (untagSound != null) untagSound.play(player);
+                        if (untagSound != null) {
+                            untagSound.play(player);
+                        }
 
                         // Cancelling the task associated with the player
                         cancelTask(log.remove(player.getName()));
@@ -228,17 +253,17 @@ public class Main extends JavaPlugin implements Listener {
             Object ppoc;
             Class<?> c4 = Class.forName("net.minecraft.server." + nmsver + ".PacketPlayOutChat");
             Class<?> c5 = Class.forName("net.minecraft.server." + nmsver + ".Packet");
-            if ((nmsver.equalsIgnoreCase("v1_8_R1") || !nmsver.startsWith("v1_8_")) && !nmsver.startsWith("v1_9_")) {
+            if (nmsver.equalsIgnoreCase("v1_8_R1") || (!nmsver.startsWith("v1_8_") && !nmsver.startsWith("v1_9_") && !nmsver.startsWith("v1_10_"))) {
                 Class<?> c2 = Class.forName("net.minecraft.server." + nmsver + ".ChatSerializer");
                 Class<?> c3 = Class.forName("net.minecraft.server." + nmsver + ".IChatBaseComponent");
                 Method m3 = c2.getDeclaredMethod("a", String.class);
                 Object cbc = c3.cast(m3.invoke(c2, "{\"text\": \"" + message + "\"}"));
-                ppoc = c4.getConstructor(new Class<?>[]{c3, byte.class}).newInstance(cbc, (byte) 2);
+                ppoc = c4.getConstructor(c3, byte.class).newInstance(cbc, (byte) 2);
             } else {
                 Class<?> c2 = Class.forName("net.minecraft.server." + nmsver + ".ChatComponentText");
                 Class<?> c3 = Class.forName("net.minecraft.server." + nmsver + ".IChatBaseComponent");
-                Object o = c2.getConstructor(new Class<?>[]{String.class}).newInstance(message);
-                ppoc = c4.getConstructor(new Class<?>[]{c3, byte.class}).newInstance(o, (byte) 2);
+                Object o = c2.getConstructor(String.class).newInstance(message);
+                ppoc = c4.getConstructor(c3, byte.class).newInstance(o, (byte) 2);
             }
             Method m1 = c1.getDeclaredMethod("getHandle");
             Object h = m1.invoke(p);
