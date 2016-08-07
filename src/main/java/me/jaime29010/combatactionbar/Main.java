@@ -2,6 +2,7 @@ package me.jaime29010.combatactionbar;
 
 import me.jaime29010.combatactionbar.hooks.HookType;
 import me.jaime29010.combatactionbar.hooks.PluginHook;
+import me.jaime29010.combatactionbar.tasks.BarTask;
 import me.jaime29010.combatactionbar.utils.ActionBarHelper;
 import me.jaime29010.combatactionbar.utils.ConfigurationManager;
 import me.jaime29010.combatactionbar.utils.SoundInfo;
@@ -24,19 +25,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.inventivetalent.update.spiget.SpigetUpdate;
 import org.inventivetalent.update.spiget.UpdateCallback;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 public final class Main extends JavaPlugin implements Listener {
-    private final Map<String, Integer> log = new HashMap<>();
     private FileConfiguration config;
+    private final Map<UUID, BarTask> tasks = new HashMap<>();
+    private final List<String> disabledWorlds = new ArrayList<>();
     private int duration = 10;
     private String tagText, untagText, character, bar;
     private SoundInfo tagSound, untagSound;
-    private List<String> disabledWorlds = new ArrayList<>();
     private PluginHook hook;
 
     @Override
@@ -50,15 +48,13 @@ public final class Main extends JavaPlugin implements Listener {
     }
 
     public void enablePlugin() {
-        // Loading the configuration
-        config = ConfigurationManager.loadConfig("config.yml", this);
+        getConfig();
 
-        // Checking if there is any anti combat log plugin installed
         if (config.getBoolean("plugin-check")) {
             if (tryHook()) {
                 duration = hook.getDuration();
             } else {
-                getLogger().warning("No anti combat log plugin has been found, install one or disable plugin-check in the config");
+                getLogger().warning("No anti combat tasks plugin has been found, install one or disable plugin-check in the config");
                 setEnabled(false);
                 return;
             }
@@ -66,39 +62,27 @@ public final class Main extends JavaPlugin implements Listener {
             duration = config.getInt("time-untag");
         }
 
-        // Character for the piece of message representing a second
         character = config.getString("character");
-
-        // Setting the bar length
         bar = new String(new char[duration]).replace("\0", character);
 
-        // Setting the tag text
         tagText = config.getString("on-tag.text");
-
-        // Setting the tag sound
         tagSound = "NONE".equals(config.getString("on-tag.sound.type")) ? null : new SoundInfo(
                 Sounds.valueOf(config.getString("on-tag.sound.type")).get(),
                 (float) config.getDouble("on-tag.sound.volume"),
                 (float) config.getDouble("on-tag.sound.pitch"));
 
-        // Setting the untag text
         untagText = config.getString("on-untag.text");
-
-        // Setting the untag sound
         untagSound = "NONE".equals(config.getString("on-untag.sound.type")) ? null : new SoundInfo(
                 Sounds.valueOf(config.getString("on-untag.sound.type")).get(),
                 (float) config.getDouble("on-untag.sound.volume"),
                 (float) config.getDouble("on-untag.sound.pitch"));
 
-        //Setting the disabled worlds
         for (String name : config.getStringList("disabled-worlds")) {
             disabledWorlds.add(name);
         }
 
-        //Initialize the ActionBarHelper
         ActionBarHelper.init(this);
 
-        //Setting up the updater
         if (config.getBoolean("auto-update")) {
             final SpigetUpdate updater = new SpigetUpdate(this, 12923);
             updater.checkForUpdate(new UpdateCallback() {
@@ -107,7 +91,7 @@ public final class Main extends JavaPlugin implements Listener {
                     if (hasDirectDownload) {
                         if (updater.downloadUpdate()) {
                             getLogger().info("The plugin has successfully updated to version " + newVersion);
-                            getLogger().info("The next time you start your server the plugin will have the version");
+                            getLogger().info("The next time you start your server the plugin will have the new version");
                         } else {
                             getLogger().warning("Update download failed, reason is " + updater.getFailReason());
                         }
@@ -121,14 +105,13 @@ public final class Main extends JavaPlugin implements Listener {
             });
         }
 
-        // Registering the events
         getServer().getPluginManager().registerEvents(this, this);
     }
 
     public void disablePlugin() {
-        // Cleaning and cancelling all the tasks
-        for (Entry<String, Integer> entry : log.entrySet()) {
-            cancelTask(log.remove(entry.getKey()));
+        for (Entry<UUID, BarTask> entry : tasks.entrySet()) {
+            BarTask task = entry.getValue();
+            task.cancel();
         }
     }
 
@@ -145,44 +128,35 @@ public final class Main extends JavaPlugin implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onHit(EntityDamageByEntityEvent event) {
-        // The tagging and sending of the action bar
+    public void on(EntityDamageByEntityEvent event) {
         if (event.isCancelled()) return;
         if (event.getEntity() instanceof Player) {
             Player damaged = (Player) event.getEntity();
+            Player damager = null;
             if (event.getDamager() instanceof Player) {
-                Player damager = (Player) event.getDamager();
-                if (config.getBoolean("send-damaged")) sendTag(damaged);
-                if (config.getBoolean("send-damager")) sendTag(damager);
+                damager = (Player) event.getDamager();
             } else if (event.getDamager() instanceof Projectile) {
                 Projectile projectile = (Projectile) event.getDamager();
                 if (projectile.getShooter() instanceof Player) {
-                    Player damager = (Player) projectile.getShooter();
+                    damager = (Player) projectile.getShooter();
                     if (config.getBoolean("ignore-self-damage") && damager.equals(damaged)) return;
-                    if (config.getBoolean("send-damaged")) sendTag(damaged);
-                    if (config.getBoolean("send-damager")) sendTag(damager);
                 }
+            }
+            if (damager != null) {
+                if (config.getBoolean("send-damaged")) sendTag(damaged);
+                if (config.getBoolean("send-damager")) sendTag(damager);
             }
         }
     }
 
     @EventHandler
-    public void onDeath(PlayerDeathEvent event) {
-        // Removing the player from the log and canceling the task when the player dies
-        checkBar(event.getEntity());
+    public void on(PlayerDeathEvent event) {
+        cancelTask(event.getEntity());
     }
 
     @EventHandler(priority = EventPriority.MONITOR)
-    public void onQuit(PlayerQuitEvent event) {
-        // Removing the player from the log and canceling the task when the player quits
-        checkBar(event.getPlayer());
-    }
-
-    public void checkBar(Player player) {
-        // Removes the player from the log and cancels the task
-        if (log.containsKey(player.getName())) {
-            cancelTask(log.remove(player.getName()));
-        }
+    public void on(PlayerQuitEvent event) {
+        cancelTask(event.getPlayer());
     }
 
     public boolean tryHook() {
@@ -202,72 +176,74 @@ public final class Main extends JavaPlugin implements Listener {
         return false;
     }
 
-    // Adding color to messages
-    private String color(String string) {
-        return ChatColor.translateAlternateColorCodes('&', string);
-    }
-
-    // Canceling a task with its id
-    public void cancelTask(int taskId) {
-        getServer().getScheduler().cancelTask(taskId);
-    }
-
     public void sendTag(Player... players) {
         for (final Player player : players) {
-            if (player == null) continue;
-            // Check for player in creative mode
-            if (player.getGameMode() == GameMode.CREATIVE) continue;
-
-            // Not executing the task if the player is in a disabled world
-            if (disabledWorlds.contains(player.getWorld().getName())) continue;
-
-            // Not executing the task if the player has the nobar permission
-            if (player.hasPermission("combatactionbar.nobar")) continue;
-
-            // Canceling the previous task associated with the player
-            if (log.containsKey(player.getName())) {
-                cancelTask(log.remove(player.getName()));
+            if (isPermitted(player)) {
+                cancelTask(player);
+                tasks.put(player.getUniqueId(), new BarTask(this, player));
             }
-
-            // Adding and executing the task
-            log.put(player.getName(), getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
-                int times = duration;
-                @Override
-                public void run() {
-                    if (times > 0) {
-                        // Canceling the task if the player is in a disabled world
-                        if (disabledWorlds.contains(player.getWorld().getName())) {
-                            cancelTask(log.remove(player.getName()));
-                        }
-
-                        // Sending the tag bar
-                        ActionBarHelper.sendActionBar(player, color(tagText
-                                // Replacements for the message
-                                .replace("{left}", bar.substring(0, times * character.length()))
-                                .replace("{right}", bar.substring(times * character.length(), bar.length()))
-                                .replace("{time}", String.valueOf(times))));
-
-                        // Sending the tag sound
-                        if (tagSound != null) {
-                            tagSound.play(player);
-                        }
-
-                        // Decreasing the duration count
-                        times--;
-                    } else {
-                        // Sending the untag bar
-                        ActionBarHelper.sendActionBar(player, color(untagText));
-
-                        // Sending the untag sound
-                        if (untagSound != null) {
-                            untagSound.play(player);
-                        }
-
-                        // Cancelling the task associated with the player
-                        cancelTask(log.remove(player.getName()));
-                    }
-                }
-            }, 0, 20));
         }
+    }
+
+    public boolean isPermitted(Player player) {
+        if (player == null) return false;
+        if (player.getGameMode() == GameMode.CREATIVE) return false;
+        if (disabledWorlds.contains(player.getWorld().getName())) return false;
+        if (player.hasPermission("combatactionbar.nobar")) return false;
+        return true;
+    }
+
+    public void cancelTask(Player player) {
+        BarTask task = tasks.remove(player.getUniqueId());
+        task.cancel();
+    }
+
+    public int getDuration() {
+        return duration;
+    }
+
+    public String getTagText() {
+        return tagText;
+    }
+
+    public String getUntagText() {
+        return untagText;
+    }
+
+    public String getCharacter() {
+        return character;
+    }
+
+    public String getBar() {
+        return bar;
+    }
+
+    public SoundInfo getTagSound() {
+        return tagSound;
+    }
+
+    public SoundInfo getUntagSound() {
+        return untagSound;
+    }
+
+    @Override
+    public FileConfiguration getConfig() {
+        config = ConfigurationManager.loadConfig("config.yml", this);
+        return config;
+    }
+
+    @Override
+    public void reloadConfig() {
+        getConfig();
+    }
+
+    @Override
+    public void saveConfig() {
+        ConfigurationManager.saveConfig(config, "config.yml", this);
+    }
+
+    @Override
+    public void saveDefaultConfig() {
+        getConfig();
     }
 }

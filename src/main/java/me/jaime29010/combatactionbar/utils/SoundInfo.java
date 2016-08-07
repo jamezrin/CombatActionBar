@@ -25,7 +25,8 @@ public final class SoundInfo {
         return pitch;
     }
 
-    public void play(Player player) {
-        player.playSound(player.getLocation(), sound, volume, pitch);
+    public static void play(SoundInfo sound, Player player) {
+        if (sound == null || player == null) return;
+        player.playSound(player.getLocation(), sound.getSound(), sound.getVolume(), sound.getPitch());
     }
 }

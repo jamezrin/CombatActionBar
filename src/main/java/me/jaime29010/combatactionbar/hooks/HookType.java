@@ -4,9 +4,6 @@ import me.jaime29010.combatactionbar.hooks.types.*;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
-/**
- * Created by Jaime Martinez Rincon aka MrJaime on 04/06/2016.
- */
 public enum HookType {
     COMBAT_LOG ("CombatLog", CombatLogHook.class),
     COMBAT_TAG("CombatTag", CombatTagHook.class),

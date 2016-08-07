@@ -28,7 +28,6 @@ public final class ActionBarHelper {
         return hooked;
     }
 
-    // Method taken from ActionBarAPI
     public static void sendActionBar(Player player, String message) {
         if (hasHooked()) {
             ActionBarAPI.sendActionBar(player, message);

@@ -6,9 +6,6 @@ import net.techcable.combattag.config.CombatTagConfig;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 
-/**
- * Created by Jaime Martinez Rincon aka MrJaime on 09/06/2016.
- */
 public class CombatTagHook implements PluginHook {
     private CombatTagConfig settings;
     @Override
