@@ -6,6 +6,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 
 public final class PvPManagerHook implements PluginHook {
+
     @Override
     public boolean hook(Plugin plugin, PluginManager manager) {
         return true;

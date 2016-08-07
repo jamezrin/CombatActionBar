@@ -195,7 +195,9 @@ public final class Main extends JavaPlugin implements Listener {
 
     public void cancelTask(Player player) {
         BarTask task = tasks.remove(player.getUniqueId());
-        task.cancel();
+        if (task != null) {
+            task.cancel();
+        }
     }
 
     public int getDuration() {

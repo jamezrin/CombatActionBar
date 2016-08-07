@@ -8,6 +8,7 @@ import org.bukkit.plugin.PluginManager;
 
 public class CombatTagHook implements PluginHook {
     private CombatTagConfig settings;
+
     @Override
     public boolean hook(Plugin plugin, PluginManager manager) {
         CombatTag main = (CombatTag) plugin;

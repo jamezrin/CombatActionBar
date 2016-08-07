@@ -7,9 +7,14 @@ import org.bukkit.plugin.PluginManager;
 
 public class CombatLogHook implements PluginHook {
     private CombatLog main;
+
     @Override
     public boolean hook(Plugin plugin, PluginManager manager) {
-        main = (CombatLog) plugin;
+        try {
+            main = (CombatLog) plugin;
+        } catch (Exception e) {
+            return false;
+        }
         return true;
     }
 

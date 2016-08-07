@@ -7,9 +7,14 @@ import org.bukkit.plugin.PluginManager;
 
 public final class AntiCombatLogHook implements PluginHook {
     private Configuration config;
+
     @Override
     public boolean hook(Plugin plugin, PluginManager manager) {
-        config = plugin.getConfig();
+        try {
+            config = plugin.getConfig();
+        } catch (Exception e) {
+            return false;
+        }
         return true;
     }
 

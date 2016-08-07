@@ -8,10 +8,15 @@ import org.bukkit.plugin.PluginManager;
 
 public final class CombatTagPlusHook implements PluginHook {
     private Settings settings;
+
     @Override
     public boolean hook(Plugin plugin, PluginManager manager) {
-        CombatTagPlus main = (CombatTagPlus) plugin;
-        settings = main.getSettings();
+        try {
+            CombatTagPlus main = (CombatTagPlus) plugin;
+            settings = main.getSettings();
+        } catch (Exception e) {
+            return false;
+        }
         return true;
     }
 

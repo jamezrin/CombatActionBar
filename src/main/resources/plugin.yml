@@ -8,3 +8,7 @@ commands:
     description: Command for reloading the config of CombatActionBar
     permission: combatactionbar.reload
     aliases: [combatab, cab]
+permissions:
+  combatactionbar.nobar:
+    description: Use this permission when you do not want to receive the action bar
+    default: false
