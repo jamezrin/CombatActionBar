@@ -75,13 +75,6 @@
             <version>1.8.8-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
-        <!--SpigetUpdater-->
-        <dependency>
-            <groupId>org.inventivetalent.spiget-update</groupId>
-            <artifactId>bukkit</artifactId>
-            <version>1.3.0</version>
-            <scope>provided</scope>
-        </dependency>
         <!--ActionBarAPI-->
         <dependency>
             <groupId>com.connorlinfoot</groupId>
@@ -130,6 +123,12 @@
             <artifactId>plugins</artifactId>
             <version>1.8.11</version>
             <scope>provided</scope>
+        </dependency>
+        <!--SpigetUpdater-->
+        <dependency>
+            <groupId>org.inventivetalent.spiget-update</groupId>
+            <artifactId>bukkit</artifactId>
+            <version>1.3.0</version>
         </dependency>
     </dependencies>
 </project>

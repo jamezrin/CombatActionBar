@@ -55,7 +55,7 @@ public final class Main extends JavaPlugin implements Listener {
 
         //Setting up the updater
         if (config.getBoolean("auto-update")) {
-            final SpigetUpdate updater = new SpigetUpdate(this, 12345);
+            final SpigetUpdate updater = new SpigetUpdate(this, 12923);
             updater.checkForUpdate(new UpdateCallback() {
                 @Override
                 public void updateAvailable(String newVersion, String downloadUrl, boolean hasDirectDownload) {
