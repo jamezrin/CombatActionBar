@@ -54,7 +54,7 @@ public final class Main extends JavaPlugin implements Listener {
             if (tryHook()) {
                 duration = hook.getDuration();
             } else {
-                getLogger().warning("No anti combat tasks plugin has been found, install one or disable plugin-check in the config");
+                getLogger().warning("No anti combat logout plugin has been found, install one or disable plugin-check in the config");
                 setEnabled(false);
                 return;
             }
@@ -139,7 +139,7 @@ public final class Main extends JavaPlugin implements Listener {
                 Projectile projectile = (Projectile) event.getDamager();
                 if (projectile.getShooter() instanceof Player) {
                     damager = (Player) projectile.getShooter();
-                    if (config.getBoolean("ignore-self-damage") && damager.equals(damaged)) return;
+                    if (damager.equals(damaged) && config.getBoolean("ignore-self-damage")) return;
                 }
             }
             if (damager != null) {
