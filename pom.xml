@@ -33,6 +33,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <finalName>CombatActionBar</finalName>
                             <artifactSet>
                                 <includes>
                                     <include>org.inventivetalent.spiget-update:**</include>
