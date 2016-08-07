@@ -2,9 +2,12 @@ package me.jaime29010.combatactionbar;
 
 import me.jaime29010.combatactionbar.hooks.HookType;
 import me.jaime29010.combatactionbar.hooks.PluginHook;
+import me.jaime29010.combatactionbar.utils.ActionBarHelper;
+import me.jaime29010.combatactionbar.utils.ConfigurationManager;
+import me.jaime29010.combatactionbar.utils.SoundInfo;
+import me.jaime29010.combatactionbar.utils.Sounds;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
-import org.bukkit.Sound;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -16,21 +19,19 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-public class Main extends JavaPlugin implements Listener {
+public final class Main extends JavaPlugin implements Listener {
     private final Map<String, Integer> log = new HashMap<>();
     private FileConfiguration config;
     private int duration = 10;
-    private String nmsver;
     private String tagText, untagText, character, bar;
     private SoundInfo tagSound, untagSound;
     private List<String> disabledWorlds = new ArrayList<>();
@@ -57,6 +58,7 @@ public class Main extends JavaPlugin implements Listener {
             } else {
                 getLogger().warning("No anti combat log plugin has been found, install one or disable plugin-check in the config");
                 setEnabled(false);
+                return;
             }
         } else {
             duration = config.getInt("time-untag");
@@ -73,7 +75,7 @@ public class Main extends JavaPlugin implements Listener {
 
         // Setting the tag sound
         tagSound = "NONE".equals(config.getString("on-tag.sound.type")) ? null : new SoundInfo(
-                Sound.valueOf(config.getString("on-tag.sound.type")),
+                Sounds.valueOf(config.getString("on-tag.sound.type")).get(),
                 (float) config.getDouble("on-tag.sound.volume"),
                 (float) config.getDouble("on-tag.sound.pitch"));
 
@@ -82,7 +84,7 @@ public class Main extends JavaPlugin implements Listener {
 
         // Setting the untag sound
         untagSound = "NONE".equals(config.getString("on-untag.sound.type")) ? null : new SoundInfo(
-                Sound.valueOf(config.getString("on-untag.sound.type")),
+                Sounds.valueOf(config.getString("on-untag.sound.type")).get(),
                 (float) config.getDouble("on-untag.sound.volume"),
                 (float) config.getDouble("on-untag.sound.pitch"));
 
@@ -91,9 +93,8 @@ public class Main extends JavaPlugin implements Listener {
             disabledWorlds.add(name);
         }
 
-        // Getting the nms package
-        nmsver = getServer().getClass().getPackage().getName();
-        nmsver = nmsver.substring(nmsver.lastIndexOf(".") + 1);
+        //Initialize the ActionBarHelper
+        ActionBarHelper.init(this);
 
         // Registering the events
         getServer().getPluginManager().registerEvents(this, this);
@@ -126,14 +127,14 @@ public class Main extends JavaPlugin implements Listener {
             Player damaged = (Player) event.getEntity();
             if (event.getDamager() instanceof Player) {
                 Player damager = (Player) event.getDamager();
-                sendTag(damaged);
+                if (config.getBoolean("send-damaged")) sendTag(damaged);
                 if (config.getBoolean("send-damager")) sendTag(damager);
             } else if (event.getDamager() instanceof Projectile) {
                 Projectile projectile = (Projectile) event.getDamager();
                 if (projectile.getShooter() instanceof Player) {
                     Player damager = (Player) projectile.getShooter();
-                    if (damager.equals(damaged)) return;
-                    sendTag(damaged);
+                    if (config.getBoolean("ignore-self-damage") && damager.equals(damaged)) return;
+                    if (config.getBoolean("send-damaged")) sendTag(damaged);
                     if (config.getBoolean("send-damager")) sendTag(damager);
                 }
             }
@@ -164,9 +165,10 @@ public class Main extends JavaPlugin implements Listener {
             if (type.check()) {
                 try {
                     hook = type.getHook().newInstance();
-                    hook.hook(type.getPlugin(), getServer().getPluginManager());
-                    getLogger().info("Hooked into " + hook.getClass());
-                } catch (InstantiationException | IllegalAccessException e) {
+                    Plugin plugin = type.getPlugin();
+                    hook.hook(plugin, getServer().getPluginManager());
+                    getLogger().info(String.format("Successfully hooked into %s (%s)", hook.getClass(), plugin.getName()));
+                } catch (ReflectiveOperationException e) {
                     e.printStackTrace();
                 }
                 return true;
@@ -214,11 +216,11 @@ public class Main extends JavaPlugin implements Listener {
                         }
 
                         // Sending the tag bar
-                        sendActionBar(player, color(tagText
+                        ActionBarHelper.sendActionBar(player, color(tagText
                                 // Replacements for the message
                                 .replace("{left}", bar.substring(0, times * character.length()))
                                 .replace("{right}", bar.substring(times * character.length(), bar.length()))
-                                .replace("{duration}", String.valueOf(times))));
+                                .replace("{time}", String.valueOf(times))));
 
                         // Sending the tag sound
                         if (tagSound != null) {
@@ -229,7 +231,7 @@ public class Main extends JavaPlugin implements Listener {
                         times--;
                     } else {
                         // Sending the untag bar
-                        sendActionBar(player, color(untagText));
+                        ActionBarHelper.sendActionBar(player, color(untagText));
 
                         // Sending the untag sound
                         if (untagSound != null) {
@@ -241,37 +243,6 @@ public class Main extends JavaPlugin implements Listener {
                     }
                 }
             }, 0, 20));
-        }
-    }
-
-    // Method taken from ActionBarAPI
-    private void sendActionBar(Player player, String message) {
-        try {
-            Class<?> c1 = Class.forName("org.bukkit.craftbukkit." + nmsver + ".entity.CraftPlayer");
-            Object p = c1.cast(player);
-            Object ppoc;
-            Class<?> c4 = Class.forName("net.minecraft.server." + nmsver + ".PacketPlayOutChat");
-            Class<?> c5 = Class.forName("net.minecraft.server." + nmsver + ".Packet");
-            if (nmsver.equalsIgnoreCase("v1_8_R1") || (!nmsver.startsWith("v1_8_") && !nmsver.startsWith("v1_9_") && !nmsver.startsWith("v1_10_"))) {
-                Class<?> c2 = Class.forName("net.minecraft.server." + nmsver + ".ChatSerializer");
-                Class<?> c3 = Class.forName("net.minecraft.server." + nmsver + ".IChatBaseComponent");
-                Method m3 = c2.getDeclaredMethod("a", String.class);
-                Object cbc = c3.cast(m3.invoke(c2, "{\"text\": \"" + message + "\"}"));
-                ppoc = c4.getConstructor(c3, byte.class).newInstance(cbc, (byte) 2);
-            } else {
-                Class<?> c2 = Class.forName("net.minecraft.server." + nmsver + ".ChatComponentText");
-                Class<?> c3 = Class.forName("net.minecraft.server." + nmsver + ".IChatBaseComponent");
-                Object o = c2.getConstructor(String.class).newInstance(message);
-                ppoc = c4.getConstructor(c3, byte.class).newInstance(o, (byte) 2);
-            }
-            Method m1 = c1.getDeclaredMethod("getHandle");
-            Object h = m1.invoke(p);
-            Field f1 = h.getClass().getDeclaredField("playerConnection");
-            Object pc = f1.get(h);
-            Method m5 = pc.getClass().getDeclaredMethod("sendPacket", c5);
-            m5.invoke(pc, ppoc);
-        } catch (Exception ex) {
-            ex.printStackTrace();
         }
     }
 }

@@ -6,7 +6,7 @@
 
     <groupId>me.jaime29010</groupId>
     <artifactId>combatactionbar</artifactId>
-    <version>2.0.1</version>
+    <version>2.1</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -49,6 +49,13 @@
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
             <version>1.8.8-R0.1-SNAPSHOT</version>
+            <scope>provided</scope>
+        </dependency>
+        <!--ActionBarAPI-->
+        <dependency>
+            <groupId>com.connorlinfoot</groupId>
+            <artifactId>ActionBarAPI</artifactId>
+            <version>1.5.2</version>
             <scope>provided</scope>
         </dependency>
         <!--GriefPrevention-->

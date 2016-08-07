@@ -1,29 +1,36 @@
 # The character (or set of characters) representing a second
-character: '||'
+character: "||"
 
 # The amount of seconds before the player is not tagged anymore
+# This will be ignored if this plugin hooks to a combatlog-type plugin
 time-untag: 10
 
 # Check if officially supported plugins are installed on the server and hook to them
 plugin-check: true
 
-# Check if we should send the bar to the damager too
+# Check if we should send the bar to the damaged and/or the damager players
+send-damaged: true
 send-damager: true
+
+# Check if we should not send the bar if the player damages itself with a projectile
+ignore-self-damage: true
 
 # The worlds where the bar should not appear
 disabled-worlds:
   - disabledworld1
   - disabledworld2
 
-# This happens when someone damages the player and ends when the specified time has passed
+# This happens while a player is tagged in combat
+# IMPORTANT: Use one of the sounds listed here: https://goo.gl/GDxBIR (Sounds for all versions)
 on-tag:
-  text: '&bCombat: &7&l[&a{left}&c{right}&7&l] &r&e{seconds} &b[sec]'
+  text: "&bCombat: &7&l[&a{left}&c{right}&7&l] &r&e{time} &b[sec]"
   sound:
     type: NONE
     volume: 1
     pitch: 1
 
 # This happens when the specified time has passed
+# IMPORTANT: Use one of the sounds listed here: https://goo.gl/GDxBIR (Sounds for all versions)
 on-untag:
   text: '&aYou can now safely disconnect'
   sound:

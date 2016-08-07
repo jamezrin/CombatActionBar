@@ -1,5 +1,6 @@
-package me.jaime29010.combatactionbar;
+package me.jaime29010.combatactionbar.utils;
 
+import me.jaime29010.combatactionbar.Main;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
@@ -7,9 +8,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
-public class ConfigurationManager {
+public final class ConfigurationManager {
     public static FileConfiguration loadConfig(File file, Main main) {
-        FileConfiguration config = null;
+        FileConfiguration config;
         if (!main.getDataFolder().exists())
             main.getDataFolder().mkdir();
         if (!file.exists()) {

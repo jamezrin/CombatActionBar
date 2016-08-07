@@ -1,4 +1,4 @@
-package me.jaime29010.combatactionbar;
+package me.jaime29010.combatactionbar.utils;
 
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
