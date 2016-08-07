@@ -21,6 +21,8 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.inventivetalent.update.spiget.SpigetUpdate;
+import org.inventivetalent.update.spiget.UpdateCallback;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,6 +52,29 @@ public final class Main extends JavaPlugin implements Listener {
     public void enablePlugin() {
         // Loading the configuration
         config = ConfigurationManager.loadConfig("config.yml", this);
+
+        //Setting up the updater
+        if (config.getBoolean("auto-update")) {
+            final SpigetUpdate updater = new SpigetUpdate(this, 12345);
+            updater.checkForUpdate(new UpdateCallback() {
+                @Override
+                public void updateAvailable(String newVersion, String downloadUrl, boolean hasDirectDownload) {
+                    if (hasDirectDownload) {
+                        if (updater.downloadUpdate()) {
+                            getLogger().info("The plugin has successfully updated to version " + newVersion);
+                            getLogger().info("The next time you start your server the plugin will be replaced with the new version");
+                        } else {
+                            getLogger().warning("Update download failed, reason is " + updater.getFailReason());
+                        }
+                    }
+                }
+
+                @Override
+                public void upToDate() {
+                    getLogger().info("The plugin is in the latest version available");
+                }
+            });
+        }
 
         // Checking if there is any anti combat log plugin installed
         if (config.getBoolean("plugin-check")) {
