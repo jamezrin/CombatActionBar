@@ -1,6 +1,5 @@
-package me.jaime29010.combatactionbar.tasks;
+package me.jaime29010.combatactionbar;
 
-import me.jaime29010.combatactionbar.Main;
 import me.jaime29010.combatactionbar.utils.ActionBarHelper;
 import me.jaime29010.combatactionbar.utils.PluginUtils;
 import me.jaime29010.combatactionbar.utils.SoundInfo;

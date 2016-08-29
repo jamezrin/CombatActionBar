@@ -1,21 +1,21 @@
 package me.jaime29010.combatactionbar.utils;
 
-import me.jaime29010.combatactionbar.Main;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 
 public final class ConfigurationManager {
-    public static FileConfiguration loadConfig(File file, Main main) {
+    public static FileConfiguration loadConfig(File file, Plugin plugin) {
         FileConfiguration config;
-        if (!main.getDataFolder().exists())
-            main.getDataFolder().mkdir();
+        if (!plugin.getDataFolder().exists())
+            plugin.getDataFolder().mkdir();
         if (!file.exists()) {
             try {
-                Files.copy(main.getResource(file.getName()), file.toPath());
+                Files.copy(plugin.getResource(file.getName()), file.toPath());
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -23,13 +23,13 @@ public final class ConfigurationManager {
         config = YamlConfiguration.loadConfiguration(file);
         return config;
     }
-    public static FileConfiguration loadConfig(String name, Main main) {
-        return loadConfig(new File(main.getDataFolder(), name), main);
+    public static FileConfiguration loadConfig(String name, Plugin plugin) {
+        return loadConfig(new File(plugin.getDataFolder(), name), plugin);
     }
 
-    public static boolean saveConfig(FileConfiguration config, File file, Main main) {
-        if (!main.getDataFolder().exists())
-            main.getDataFolder().mkdir();
+    public static boolean saveConfig(FileConfiguration config, File file, Plugin plugin) {
+        if (!plugin.getDataFolder().exists())
+            plugin.getDataFolder().mkdir();
         try {
             config.save(file);
         } catch (IOException e) {
@@ -39,7 +39,7 @@ public final class ConfigurationManager {
         return true;
     }
 
-    public static boolean saveConfig(FileConfiguration config, String name, Main main) {
-        return saveConfig(config, new File(main.getDataFolder(), name), main);
+    public static boolean saveConfig(FileConfiguration config, String name, Plugin plugin) {
+        return saveConfig(config, new File(plugin.getDataFolder(), name), plugin);
     }
 }

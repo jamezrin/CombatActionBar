@@ -1,8 +1,5 @@
 package me.jaime29010.combatactionbar;
 
-import me.jaime29010.combatactionbar.hooks.HookType;
-import me.jaime29010.combatactionbar.hooks.PluginHook;
-import me.jaime29010.combatactionbar.tasks.BarTask;
 import me.jaime29010.combatactionbar.utils.ActionBarHelper;
 import me.jaime29010.combatactionbar.utils.ConfigurationManager;
 import me.jaime29010.combatactionbar.utils.SoundInfo;
@@ -35,7 +32,6 @@ public final class Main extends JavaPlugin implements Listener {
     private int duration = 10;
     private String tagText, untagText, character, bar;
     private SoundInfo tagSound, untagSound;
-    private PluginHook hook;
 
     @Override
     public void onEnable() {
@@ -51,9 +47,7 @@ public final class Main extends JavaPlugin implements Listener {
         getConfig();
 
         if (config.getBoolean("plugin-check")) {
-            if (tryHook()) {
-                duration = hook.getDuration();
-            } else {
+            if (!tryHook()) {
                 getLogger().warning("No anti combat logout plugin has been found, install one or disable plugin-check in the config");
                 setEnabled(false);
                 return;
@@ -63,7 +57,13 @@ public final class Main extends JavaPlugin implements Listener {
         }
 
         character = config.getString("character");
-        bar = new String(new char[duration]).replace("\0", character);
+
+        StringBuilder buffer = new StringBuilder();
+        for (int index = 0; index < duration; index++) {
+            buffer.append(character);
+        }
+        bar = buffer.toString();
+        //bar = new String(new char[duration]).replace("\0", character);
 
         tagText = config.getString("on-tag.text");
         tagSound = "NONE".equals(config.getString("on-tag.sound.type")) ? null : new SoundInfo(
@@ -113,6 +113,7 @@ public final class Main extends JavaPlugin implements Listener {
             BarTask task = entry.getValue();
             task.cancel();
         }
+        tasks.clear();
     }
 
     @Override
@@ -162,14 +163,9 @@ public final class Main extends JavaPlugin implements Listener {
     public boolean tryHook() {
         for (HookType type : HookType.values()) {
             if (type.check()) {
-                try {
-                    hook = type.getHook().newInstance();
-                    Plugin plugin = type.getPlugin();
-                    hook.hook(plugin, getServer().getPluginManager());
-                    getLogger().info(String.format("Successfully hooked into %s (%s)", hook.getClass(), plugin.getName()));
-                } catch (ReflectiveOperationException e) {
-                    e.printStackTrace();
-                }
+                Plugin plugin = type.getPlugin();
+                duration = type.hook();
+                getLogger().info(String.format("Successfully hooked into %s (%s)", type.toString(), plugin.getName()));
                 return true;
             }
         }
