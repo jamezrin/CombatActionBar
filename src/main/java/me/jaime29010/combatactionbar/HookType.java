@@ -7,7 +7,7 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
 
 public enum HookType {
-    COMBAT_LOG("CombatLog", "https://dev.bukkit.org/bukkit-plugins/combatlog/", "config.yml", "Tag-Duration"),
+    COMBAT_LOG("CombatLog", "https://dev.bukkit.org/bukkit-plugins/combatlog/", "combatlog.yml", "Tag-Duration"),
     COMBAT_TAG("CombatTag", "https://www.spigotmc.org/resources/3182/", "config.yml", "Tag-Duration"),
     COMBAT_TAG_PLUS("CombatTagPlus", "https://www.spigotmc.org/resources/4775/", "config.yml", "tag-duration"),
     PVP_MANAGER("PvPManager", "https://www.spigotmc.org/resources/845/", "config.yml", "Tagged In Combat.Time"),
