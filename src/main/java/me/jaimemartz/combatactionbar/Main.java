@@ -1,9 +1,9 @@
-package me.jaime29010.combatactionbar;
+package me.jaimemartz.combatactionbar;
 
-import me.jaime29010.combatactionbar.utils.ActionBarHelper;
-import me.jaime29010.combatactionbar.utils.ConfigurationManager;
-import me.jaime29010.combatactionbar.utils.SoundInfo;
-import me.jaime29010.combatactionbar.utils.Sounds;
+import me.jaimemartz.combatactionbar.utils.ActionBarHelper;
+import me.jaimemartz.combatactionbar.utils.SoundInfo;
+import me.jaimemartz.faucet.ConfigUtil;
+import me.jaimemartz.faucet.Sounds;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.command.Command;
@@ -140,7 +140,9 @@ public final class Main extends JavaPlugin implements Listener {
                 Projectile projectile = (Projectile) event.getDamager();
                 if (projectile.getShooter() instanceof Player) {
                     damager = (Player) projectile.getShooter();
-                    if (damager.equals(damaged) && config.getBoolean("ignore-self-damage")) return;
+                    if (damager.equals(damaged) && config.getBoolean("ignore-self-damage")) {
+                        return;
+                    }
                 }
             }
             if (damager != null) {
@@ -226,7 +228,7 @@ public final class Main extends JavaPlugin implements Listener {
 
     @Override
     public FileConfiguration getConfig() {
-        config = ConfigurationManager.loadConfig("config.yml", this);
+        config = ConfigUtil.loadConfig("config.yml", this);
         return config;
     }
 
@@ -237,7 +239,7 @@ public final class Main extends JavaPlugin implements Listener {
 
     @Override
     public void saveConfig() {
-        ConfigurationManager.saveConfig(config, "config.yml", this);
+        ConfigUtil.saveConfig(config, "config.yml", this);
     }
 
     @Override

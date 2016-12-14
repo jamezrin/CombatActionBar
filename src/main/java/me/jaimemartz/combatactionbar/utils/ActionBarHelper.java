@@ -1,7 +1,7 @@
-package me.jaime29010.combatactionbar.utils;
+package me.jaimemartz.combatactionbar.utils;
 
 import com.connorlinfoot.actionbarapi.ActionBarAPI;
-import me.jaime29010.combatactionbar.Main;
+import me.jaimemartz.combatactionbar.Main;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 

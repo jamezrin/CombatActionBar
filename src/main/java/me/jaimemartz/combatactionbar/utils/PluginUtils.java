@@ -1,4 +1,4 @@
-package me.jaime29010.combatactionbar.utils;
+package me.jaimemartz.combatactionbar.utils;
 
 import org.bukkit.ChatColor;
 

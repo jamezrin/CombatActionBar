@@ -1,10 +1,11 @@
-package me.jaime29010.combatactionbar;
+package me.jaimemartz.combatactionbar;
 
-import me.jaime29010.combatactionbar.utils.ConfigurationManager;
+import me.jaimemartz.faucet.ConfigUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.java.JavaPlugin;
 
 public enum HookType {
     COMBAT_LOG("CombatLog", "https://dev.bukkit.org/bukkit-plugins/combatlog/", "combatlog.yml", "Tag-Duration"),
@@ -49,7 +50,7 @@ public enum HookType {
 
     public int hook() {
         Validate.isTrue(check(), "Tried to hook to an not loaded plugin");
-        FileConfiguration config = ConfigurationManager.loadConfig(file, plugin);
+        FileConfiguration config = ConfigUtil.loadConfig(file, (JavaPlugin) plugin);
         return config != null ? config.getInt(path) : -1;
     }
 

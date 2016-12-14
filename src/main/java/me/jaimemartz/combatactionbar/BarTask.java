@@ -1,8 +1,8 @@
-package me.jaime29010.combatactionbar;
+package me.jaimemartz.combatactionbar;
 
-import me.jaime29010.combatactionbar.utils.ActionBarHelper;
-import me.jaime29010.combatactionbar.utils.PluginUtils;
-import me.jaime29010.combatactionbar.utils.SoundInfo;
+import me.jaimemartz.combatactionbar.utils.ActionBarHelper;
+import me.jaimemartz.combatactionbar.utils.PluginUtils;
+import me.jaimemartz.combatactionbar.utils.SoundInfo;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
