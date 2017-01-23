@@ -1,6 +1,10 @@
-# Check if the plugin should be able to automaticly update itself
+# Check if the plugin should be able to automatically update itself
 # Powered by SpigetUpdater (https://github.com/InventivetalentDev/SpigetUpdater)
 auto-update: true
+
+# Check if the plugin should submit stats
+# https://bstats.org/plugin/bukkit/CombatActionBar
+submit-stats: true
 
 # The character (or set of characters) representing a second
 character: "||"

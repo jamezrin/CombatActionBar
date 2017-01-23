@@ -1,6 +1,7 @@
 package me.jaimemartz.combatactionbar;
 
 import me.jaimemartz.combatactionbar.utils.ActionBarHelper;
+import me.jaimemartz.combatactionbar.utils.Metrics;
 import me.jaimemartz.combatactionbar.utils.SoundInfo;
 import me.jaimemartz.faucet.ConfigUtil;
 import me.jaimemartz.faucet.Sounds;
@@ -103,6 +104,10 @@ public final class Main extends JavaPlugin implements Listener {
                     getLogger().info("The plugin is in the latest version available");
                 }
             });
+        }
+
+        if (config.getBoolean("submit-stats")) {
+            new Metrics(this);
         }
 
         getServer().getPluginManager().registerEvents(this, this);
