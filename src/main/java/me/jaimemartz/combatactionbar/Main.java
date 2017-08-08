@@ -1,10 +1,9 @@
 package me.jaimemartz.combatactionbar;
 
-import me.jaimemartz.combatactionbar.utils.ActionBarHelper;
-import me.jaimemartz.combatactionbar.utils.Metrics;
 import me.jaimemartz.combatactionbar.utils.SoundInfo;
 import me.jaimemartz.faucet.ConfigUtil;
 import me.jaimemartz.faucet.Sounds;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.command.Command;
@@ -47,6 +46,13 @@ public final class Main extends JavaPlugin implements Listener {
     public void enablePlugin() {
         getConfig();
 
+        Plugin plugin = getServer().getPluginManager().getPlugin("ActionBarAPI");
+        if (plugin == null || !plugin.isEnabled()) {
+            getLogger().warning("ActionBarAPI has not been found on the server, it is required to use this plugin");
+            setEnabled(false);
+            return;
+        }
+
         if (config.getBoolean("plugin-check")) {
             if (!tryHook()) {
                 getLogger().warning("No anti combat logout plugin has been found, install one or disable plugin-check in the config");
@@ -78,11 +84,7 @@ public final class Main extends JavaPlugin implements Listener {
                 (float) config.getDouble("on-untag.sound.volume"),
                 (float) config.getDouble("on-untag.sound.pitch"));
 
-        for (String name : config.getStringList("disabled-worlds")) {
-            disabledWorlds.add(name);
-        }
-
-        ActionBarHelper.init(this);
+        disabledWorlds.addAll(config.getStringList("disabled-worlds"));
 
         if (config.getBoolean("auto-update")) {
             final SpigetUpdate updater = new SpigetUpdate(this, 12923);
@@ -181,14 +183,14 @@ public final class Main extends JavaPlugin implements Listener {
 
     public void sendTag(Player... players) {
         for (final Player player : players) {
-            if (isPermitted(player)) {
+            if (isTagable(player)) {
                 cancelTask(player);
                 tasks.put(player.getUniqueId(), new BarTask(this, player));
             }
         }
     }
 
-    public boolean isPermitted(Player player) {
+    public boolean isTagable(Player player) {
         if (player == null) return false;
         if (player.getGameMode() == GameMode.CREATIVE) return false;
         if (disabledWorlds.contains(player.getWorld().getName())) return false;
@@ -201,6 +203,10 @@ public final class Main extends JavaPlugin implements Listener {
         if (task != null) {
             task.cancel();
         }
+    }
+
+    public boolean isTagged(Player player) {
+        return tasks.containsKey(player.getUniqueId());
     }
 
     public int getDuration() {

@@ -1,6 +1,6 @@
 package me.jaimemartz.combatactionbar;
 
-import me.jaimemartz.combatactionbar.utils.ActionBarHelper;
+import com.connorlinfoot.actionbarapi.ActionBarAPI;
 import me.jaimemartz.combatactionbar.utils.PluginUtils;
 import me.jaimemartz.combatactionbar.utils.SoundInfo;
 import org.bukkit.entity.Player;
@@ -20,9 +20,9 @@ public final class BarTask extends BukkitRunnable {
 
     @Override
     public void run() {
-        if (main.isPermitted(player)) {
+        if (main.isTagable(player)) {
             if (time > 0) {
-                ActionBarHelper.sendActionBar(player, PluginUtils.colorize(main.getTagText()
+                ActionBarAPI.sendActionBar(player, PluginUtils.colorize(main.getTagText()
                         .replace("{left}", main.getBar().substring(0, time * main.getCharacter().length()))
                         .replace("{right}", main.getBar().substring(time * main.getCharacter().length(), main.getBar().length()))
                         .replace("{time}", String.valueOf(time)))
@@ -31,8 +31,7 @@ public final class BarTask extends BukkitRunnable {
                 SoundInfo.play(main.getTagSound(), player);
                 time--;
             } else {
-                ActionBarHelper.sendActionBar(player, PluginUtils.colorize(main.getUntagText()));
-
+                ActionBarAPI.sendActionBar(player, PluginUtils.colorize(main.getUntagText()));
                 SoundInfo.play(main.getUntagSound(), player);
                 main.cancelTask(player);
             }
