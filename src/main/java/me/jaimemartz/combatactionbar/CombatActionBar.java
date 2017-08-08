@@ -25,7 +25,7 @@ import org.inventivetalent.update.spiget.UpdateCallback;
 import java.util.*;
 import java.util.Map.Entry;
 
-public final class Main extends JavaPlugin implements Listener {
+public final class CombatActionBar extends JavaPlugin implements Listener {
     private FileConfiguration config;
     private final Map<UUID, BarTask> tasks = new HashMap<>();
     private final List<String> disabledWorlds = new ArrayList<>();

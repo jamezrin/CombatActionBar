@@ -7,11 +7,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public final class BarTask extends BukkitRunnable {
-    private final Main main;
+    private final CombatActionBar main;
     private final Player player;
     private int time;
 
-    public BarTask(Main main, Player player) {
+    public BarTask(CombatActionBar main, Player player) {
         this.main = main;
         this.player = player;
         this.time = main.getDuration();
