@@ -177,8 +177,11 @@ public final class CombatActionBar extends JavaPlugin implements Listener {
         for (HookType type : HookType.values()) {
             if (type.check()) {
                 Plugin plugin = type.getPlugin();
-                duration = type.hook();
-                getLogger().info(String.format("Successfully hooked into %s (%s)", type.toString(), plugin.getName()));
+                if ((duration = type.hook()) != -1) {
+                    getLogger().info(String.format("Successfully hooked into %s (%s)", type.toString(), plugin.getName()));
+                } else {
+                    getLogger().info("Falling back to the config tag time, modify it in this plugin's config");
+                }
                 return true;
             }
         }

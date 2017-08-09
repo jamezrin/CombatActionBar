@@ -50,8 +50,13 @@ public enum HookType {
 
     public int hook() {
         Validate.isTrue(check(), "Tried to hook to an not loaded plugin");
-        FileConfiguration config = ConfigUtil.loadConfig(file, (JavaPlugin) plugin);
-        return config != null ? config.getInt(path) : -1;
+        try {
+            FileConfiguration config = ConfigUtil.loadConfig(file, (JavaPlugin) plugin);
+            return config != null ? config.getInt(path) : -1;
+        } catch (Exception e) {
+            new Exception("Failed to hook into " + name, e).printStackTrace();
+        }
+        return -1;
     }
 
     public boolean check() {
