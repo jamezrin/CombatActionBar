@@ -1,6 +1,6 @@
 package me.jaimemartz.combatactionbar;
 
-import me.jaimemartz.faucet.ConfigUtil;
+import me.jaimemartz.combatactionbar.utils.ConfigUtil;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;

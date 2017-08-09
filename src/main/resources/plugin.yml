@@ -1,9 +1,8 @@
 name: CombatActionBar
-main: me.jaimemartz.combatactionbar.CombatActionBar
+plugin: me.jaimemartz.combatactionbar.CombatActionBar
 version: ${project.version}
 author: jaime29010
-softdepend: [AntiCombatLog, CombatLog, CombatTag, CombatTagPlus, GriefPrevention, PvPManager]
-depend: [ActionBarAPI]
+softdepend: [AntiCombatLog, CombatLog, CombatTag, CombatTagPlus, GriefPrevention, PvPManager, ActionBarAPI]
 
 commands:
   combatactionbar:

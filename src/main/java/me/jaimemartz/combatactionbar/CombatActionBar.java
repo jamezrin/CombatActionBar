@@ -1,8 +1,11 @@
 package me.jaimemartz.combatactionbar;
 
+import com.connorlinfoot.actionbarapi.ActionBarAPI;
+import me.jaimemartz.combatactionbar.utils.ConfigUtil;
 import me.jaimemartz.combatactionbar.utils.SoundInfo;
-import me.jaimemartz.faucet.ConfigUtil;
-import me.jaimemartz.faucet.Sounds;
+import me.jaimemartz.combatactionbar.utils.Sounds;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
@@ -29,9 +32,10 @@ public final class CombatActionBar extends JavaPlugin implements Listener {
     private FileConfiguration config;
     private final Map<UUID, BarTask> tasks = new HashMap<>();
     private final List<String> disabledWorlds = new ArrayList<>();
-    private int duration = 10;
     private String tagText, untagText, character, bar;
     private SoundInfo tagSound, untagSound;
+    private boolean external = false;
+    private int duration = 10;
 
     @Override
     public void onEnable() {
@@ -48,9 +52,11 @@ public final class CombatActionBar extends JavaPlugin implements Listener {
 
         Plugin plugin = getServer().getPluginManager().getPlugin("ActionBarAPI");
         if (plugin == null || !plugin.isEnabled()) {
-            getLogger().warning("ActionBarAPI has not been found on the server, it is required to use this plugin");
-            setEnabled(false);
-            return;
+            getLogger().warning("ActionBarAPI has not been found on the server, it is recommended to use it");
+            getLogger().warning("The plugin is going to try to use Spigot methods that are available in newer versions");
+            external = false;
+        } else {
+            external = true;
         }
 
         if (config.getBoolean("plugin-check")) {
@@ -108,9 +114,7 @@ public final class CombatActionBar extends JavaPlugin implements Listener {
             });
         }
 
-        if (config.getBoolean("submit-stats")) {
-            new Metrics(this);
-        }
+        new Metrics(this);
 
         getServer().getPluginManager().registerEvents(this, this);
     }
@@ -190,6 +194,16 @@ public final class CombatActionBar extends JavaPlugin implements Listener {
         }
     }
 
+    public void sendBar(Player player, String text) {
+        if (external) {
+            ActionBarAPI.sendActionBar(player, text);
+        } else {
+            player.spigot().sendMessage(
+                    ChatMessageType.ACTION_BAR,
+                    TextComponent.fromLegacyText(text));
+        }
+    }
+
     public boolean isTagable(Player player) {
         if (player == null) return false;
         if (player.getGameMode() == GameMode.CREATIVE) return false;
@@ -205,8 +219,16 @@ public final class CombatActionBar extends JavaPlugin implements Listener {
         }
     }
 
+    public boolean isTagged(UUID uuid) {
+        return tasks.containsKey(uuid);
+    }
+
     public boolean isTagged(Player player) {
-        return tasks.containsKey(player.getUniqueId());
+        return isTagged(player.getUniqueId());
+    }
+
+    public Set<UUID> getTaggedPlayers() {
+        return tasks.keySet();
     }
 
     public int getDuration() {
